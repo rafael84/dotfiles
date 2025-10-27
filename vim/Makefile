@@ -9,44 +9,22 @@ VIM_PLUG := $(AUTOLOAD)/plug.vim
 BASE := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 SRC  := $(BASE)/src
 
-COC_EXTENSIONS := $(shell paste -sd' ' $(SRC)/coc.extensions)
-
-PIP3 := $(shell command -v pip3 2> /dev/null)
-ifndef PIP3
-define MSG
-PIP3 does not seem to be installed.
-To install it, follow the instructions found at this website:
-
-	https://pip.pypa.io/en/stable/installing/
-
-endef
-$(error $(MSG))
-endif
-
-
 NVIM_DIR  := $(HOME)/.config/nvim
 NVIM_INIT := $(NVIM_DIR)/init.vim
 
+# Check for Neovim
 NVIM := $(shell command -v nvim 2> /dev/null)
-VIM  := vim
-ifdef NVIM
-VIM := nvim
-endif
-
-
-PY3_NEOVIM := $(shell pip3 list | grep neovim 2> /dev/null)
-
-ifdef NVIM
-ifndef PY3_NEOVIM
+ifndef NVIM
 define MSG
-You have NEOVIM installed, but the Python module is not installed
-Try installing it with the following command:
+Neovim is required but not found.
+Please install Neovim 0.9.0 or later:
 
-	sudo -H pip3 install neovim
+	brew install neovim
+
+Or visit: https://neovim.io
 
 endef
 $(error $(MSG))
-endif
 endif
 
 
@@ -59,12 +37,12 @@ install: basic
 	@cat $(SRC)/plug.vim >> "$(VIMRC)"
 	@echo 'call plug#end()' >> "$(VIMRC)"
 	@cat $(SRC)/plug-*.vim >> "$(VIMRC)"
+	@cat $(SRC)/lsp-*.vim >> "$(VIMRC)"
 	@cat $(SRC)/theme-*.vim >> "$(VIMRC)"
 	@cat $(SRC)/local.vim >> "$(VIMRC)"
 
 .PHONY: basic
 basic: basic-vimrc vim-plug plugins | $(VIM_DIR)
-
 
 .PHONY: basic-vimrc
 basic-vimrc:
@@ -77,24 +55,27 @@ basic-vimrc:
 
 .PHONY: vim-plug
 vim-plug:
-	@[ -f $(VIM_PLUG) ] || \
-		curl -sfLo $(VIM_PLUG) --create-dirs \
-			https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+	@if [ ! -f $(VIM_PLUG) ]; then \
+		echo "Downloading vim-plug..."; \
+		mkdir -p $(AUTOLOAD); \
+		curl -fLo $(VIM_PLUG) \
+			https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim; \
+	fi
 	@mkdir -p $(PLUGGED)
 
 .PHONY: plugins
 plugins:
-ifdef NVIM
 	@mkdir -p $(NVIM_DIR)
 	@echo "let vimrc=expand(\"$(VIMRC)\")" > "$(NVIM_INIT)"
 	@echo 'if filereadable(vimrc)' >> $(NVIM_INIT)
 	@echo '     exec ":source " . vimrc' >> $(NVIM_INIT)
 	@echo 'endif' >> $(NVIM_INIT)
-endif
-	@cp $(SRC)/coc-settings.json $(NVIM_DIR)/coc-settings.json
-	@$(VIM) +PlugClean +PlugInstall +UpdateRemotePlugins +qall
-	@$(VIM) +GoInstallBinaries +qall
-	@$(VIM) '+CocInstall -sync $(COC_EXTENSIONS)' +qall
+	@echo "Installing Neovim plugins..."
+	@$(NVIM) +PlugClean! +PlugInstall +qall
+	@echo "Plugins installed successfully!"
+	@echo ""
+	@echo "LSP servers will be installed automatically when you first open a file."
+	@echo "To manually install LSP servers, run: make mason-install"
 
 $(VIM_DIR):
 	@mkdir -p $(VIM_DIR)
@@ -105,8 +86,23 @@ clean:
 
 .PHONY: plug-update
 plug-update:
-	@vim +PlugUpdate +UpdateRemotePlugins +qall
+	@$(NVIM) +PlugUpdate +qall
+
+.PHONY: mason-update
+mason-update:
+	@$(NVIM) +MasonUpdate +qall
+
+.PHONY: mason-install
+mason-install:
+	@echo "Installing LSP servers via Mason..."
+	@$(NVIM) --headless -c "lua require('mason.api.command').MasonInstall({ 'pyright', 'ruff', 'typescript-language-server', 'eslint-lsp', 'bash-language-server', 'shellcheck', 'shfmt', 'prettier', 'json-lsp', 'html-lsp', 'css-lsp' })" -c "qa"
+	@echo "LSP servers installed!"
 
 .PHONY: deps
 deps:
-	@brew install borkdude/brew/clj-kondo
+	@echo "Installing system dependencies..."
+	@brew install neovim ripgrep fd clj-kondo
+	@echo "For Python development with uv:"
+	@echo "  brew install uv"
+	@echo "For Node.js development:"
+	@echo "  brew install node"
