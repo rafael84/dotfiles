@@ -36,6 +36,7 @@ Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-scripts/AnsiEsc.vim'
+Plug 'folke/which-key.nvim'
 
 " LSP and Completion
 Plug 'neovim/nvim-lspconfig'
@@ -57,6 +58,14 @@ Plug 'mfussenegger/nvim-lint'
 " Diagnostics UI
 Plug 'folke/trouble.nvim'
 Plug 'nvim-tree/nvim-web-devicons'
+
+" Testing
+Plug 'nvim-neotest/neotest'
+Plug 'nvim-neotest/nvim-nio'
+Plug 'nvim-neotest/neotest-python'
+Plug 'nvim-neotest/neotest-go'
+Plug 'nvim-neotest/neotest-jest'
+Plug 'marilari88/neotest-vitest'
 
 " Go
 Plug 'fatih/vim-go', {'do': ':GoUpdateBinaries', 'for': 'go'}
