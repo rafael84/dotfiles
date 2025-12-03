@@ -2,10 +2,13 @@
 -- LSP Configuration - Base
 -- ============================================================================
 
--- Suppress lspconfig deprecation warning
+-- Suppress lspconfig deprecation warning and offset_encoding warning
 local notify = vim.notify
 vim.notify = function(msg, ...)
   if msg:match('lspconfig.*deprecated') then
+    return
+  end
+  if msg:match('multiple different client offset_encodings') then
     return
   end
   notify(msg, ...)
@@ -25,20 +28,14 @@ require('mason').setup({
   }
 })
 
+-- Mason installs and auto-enables servers, except those we configure manually
 require('mason-lspconfig').setup({
   ensure_installed = {
-    -- Python
     'pyright',
     'ruff',
-
-    -- JavaScript/TypeScript
     'ts_ls',
     'eslint',
-
-    -- Shell
     'bashls',
-
-    -- Other languages
     'gopls',
     'clojure_lsp',
     'jsonls',
@@ -46,7 +43,14 @@ require('mason-lspconfig').setup({
     'cssls',
   },
   automatic_installation = true,
+  -- Exclude servers that are manually configured in language-specific files
+  automatic_enable = {
+    exclude = { 'pyright', 'ruff', 'ts_ls', 'eslint' }
+  },
 })
+
+-- Simple servers (bashls, gopls, etc.) are auto-enabled by mason-lspconfig
+-- Python (pyright, ruff) and JS (ts_ls, eslint) are configured in language-specific files
 
 -- ============================================================================
 -- LSP Keybindings and Capabilities
@@ -66,10 +70,45 @@ local on_attach = function(client, bufnr)
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
   vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
 
+  -- Open hover documentation in a split buffer (instead of floating window)
+  vim.keymap.set('n', '<leader>K', function()
+    local params = vim.lsp.util.make_position_params()
+    vim.lsp.buf_request(0, 'textDocument/hover', params, function(err, result, ctx, config)
+      if err or not result or not result.contents then
+        vim.notify('No documentation available', vim.log.levels.INFO)
+        return
+      end
+
+      -- Create a new vertical split
+      vim.cmd('vnew')
+      local buf = vim.api.nvim_get_current_buf()
+
+      -- Set buffer options
+      vim.api.nvim_set_option_value('buftype', 'nofile', { buf = buf })
+      vim.api.nvim_set_option_value('bufhidden', 'wipe', { buf = buf })
+      vim.api.nvim_set_option_value('swapfile', false, { buf = buf })
+      vim.api.nvim_set_option_value('filetype', 'markdown', { buf = buf })
+      vim.api.nvim_buf_set_name(buf, 'LSP Documentation')
+
+      -- Convert hover result to lines
+      local lines = vim.lsp.util.convert_input_to_markdown_lines(result.contents)
+      lines = vim.lsp.util.trim_empty_lines(lines)
+
+      -- Set the content
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+      vim.api.nvim_set_option_value('modifiable', false, { buf = buf })
+
+      -- Add keybinding to close the buffer easily
+      vim.keymap.set('n', 'q', ':q<CR>', { buffer = buf, noremap = true, silent = true })
+    end)
+  end, opts)
+
   -- Actions
   vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
   vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
+  vim.keymap.set('v', '<leader>ca', vim.lsp.buf.code_action, opts)  -- Code actions on selection
   vim.keymap.set('n', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, opts)
+  vim.keymap.set('v', '<leader>f', function() vim.lsp.buf.format({ async = true }) end, opts)  -- Format selection
 
   -- Diagnostics
   vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, opts)
@@ -81,6 +120,10 @@ end
 -- LSP Capabilities (for nvim-cmp)
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
+-- Set consistent position encoding to avoid warnings
+capabilities.general = capabilities.general or {}
+capabilities.general.positionEncodings = { 'utf-16' }
+
 -- Export for use in language-specific configs
 _G.lsp_on_attach = on_attach
 _G.lsp_capabilities = capabilities
@@ -89,17 +132,19 @@ _G.lsp_capabilities = capabilities
 -- Diagnostic Signs and Configuration
 -- ============================================================================
 
-vim.fn.sign_define('DiagnosticSignError', { text = '❗', texthl = 'DiagnosticSignError' })
-vim.fn.sign_define('DiagnosticSignWarn', { text = '⚠️', texthl = 'DiagnosticSignWarn' })
-vim.fn.sign_define('DiagnosticSignInfo', { text = 'ℹ️', texthl = 'DiagnosticSignInfo' })
-vim.fn.sign_define('DiagnosticSignHint', { text = '💡', texthl = 'DiagnosticSignHint' })
-
 vim.diagnostic.config({
   virtual_text = {
     prefix = '●',
     spacing = 4,
   },
-  signs = true,
+  signs = {
+    text = {
+      [vim.diagnostic.severity.ERROR] = '❗',
+      [vim.diagnostic.severity.WARN] = '⚠️',
+      [vim.diagnostic.severity.INFO] = 'ℹ️',
+      [vim.diagnostic.severity.HINT] = '💡',
+    },
+  },
   underline = true,
   update_in_insert = false,
   severity_sort = true,

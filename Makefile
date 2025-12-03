@@ -24,6 +24,9 @@ check-deps:
 	@command -v rg >/dev/null 2>&1 && echo "✓ ripgrep" || echo "✗ ripgrep"
 	@command -v fd >/dev/null 2>&1 && echo "✓ fd" || echo "✗ fd"
 	@command -v node >/dev/null 2>&1 && echo "✓ node" || echo "✗ node"
+	@command -v shfmt >/dev/null 2>&1 && echo "✓ shfmt" || echo "✗ shfmt"
+	@command -v stylua >/dev/null 2>&1 && echo "✓ stylua" || echo "✗ stylua"
+	@command -v gofumpt >/dev/null 2>&1 && echo "✓ gofumpt" || echo "✗ gofumpt"
 
 install-deps:
 	@echo "Installing/upgrading dependencies..."
@@ -32,6 +35,9 @@ install-deps:
 	@brew install ripgrep
 	@brew install fd
 	@brew install node
+	@brew install shfmt
+	@brew install stylua
+	@brew install gofumpt
 	@echo "✓ All dependencies installed"
 
 link:
@@ -76,7 +82,7 @@ update:
 	@echo "Updating plugins..."
 	@nvim --headless +PlugUpdate +qall 2>/dev/null || true
 	@echo "Updating dependencies..."
-	@brew upgrade neovim ripgrep fd node 2>/dev/null || true
+	@brew upgrade neovim ripgrep fd node shfmt stylua gofumpt 2>/dev/null || true
 	@echo "✓ Update complete"
 
 clean:

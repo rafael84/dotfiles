@@ -133,12 +133,24 @@ opt.formatoptions:remove({ 'c', 'r', 'o' }) -- Don't continue comments on newlin
 opt.nrformats = { 'octal', 'hex', 'alpha' } -- Support for octal, hex, and alpha
 
 -- ============================================================================
--- Folding (with Treesitter)
+-- Folding
 -- ============================================================================
 
-opt.foldmethod = 'expr'                   -- Use expression for folding
-opt.foldexpr = 'nvim_treesitter#foldexpr()' -- Treesitter folding
+opt.foldmethod = 'manual'                 -- Manual folding (allows zf to create folds)
 opt.foldenable = false                    -- Don't fold by default
+
+-- Command to switch to Treesitter folding
+vim.api.nvim_create_user_command('FoldTreesitter', function()
+  vim.opt.foldmethod = 'expr'
+  vim.opt.foldexpr = 'nvim_treesitter#foldexpr()'
+  vim.notify('Switched to Treesitter folding', vim.log.levels.INFO)
+end, { desc = 'Enable Treesitter-based folding' })
+
+-- Command to switch back to manual folding
+vim.api.nvim_create_user_command('FoldManual', function()
+  vim.opt.foldmethod = 'manual'
+  vim.notify('Switched to manual folding', vim.log.levels.INFO)
+end, { desc = 'Enable manual folding' })
 
 -- ============================================================================
 -- Visuals
