@@ -16,69 +16,80 @@ if not _G.lsp_on_attach or not _G.lsp_capabilities then
   return
 end
 
--- Safely setup gopls (fails gracefully if not available)
-local setup_ok = pcall(function()
-  lspconfig.gopls.setup({
-  on_attach = _G.lsp_on_attach,
-  capabilities = _G.lsp_capabilities,
-  settings = {
-    gopls = {
-      -- Analysis settings
-      analyses = {
-        unusedparams = true,
-        shadow = true,
-        nilness = true,
-        unusedwrite = true,
-        useany = true,
+-- Safely setup gopls (fails gracefully if gopls is not installed)
+if vim.fn.executable('gopls') == 0 then
+  return
+end
+
+-- Suppress error output during setup attempt
+local old_notify = vim.notify
+vim.notify = function() end
+
+local setup_ok, err = pcall(function()
+  lspconfig['gopls'].setup({
+    on_attach = _G.lsp_on_attach,
+    capabilities = _G.lsp_capabilities,
+    settings = {
+      gopls = {
+        -- Analysis settings
+        analyses = {
+          unusedparams = true,
+          shadow = true,
+          nilness = true,
+          unusedwrite = true,
+          useany = true,
+        },
+
+        -- Static check analyzers
+        staticcheck = true,
+
+        -- Code lens
+        codelenses = {
+          gc_details = true,
+          generate = true,
+          regenerate_cgo = true,
+          test = true,
+          tidy = true,
+          upgrade_dependency = true,
+          vendor = true,
+        },
+
+        -- Hints
+        hints = {
+          assignVariableTypes = true,
+          compositeLiteralFields = true,
+          compositeLiteralTypes = true,
+          constantValues = true,
+          functionTypeParameters = true,
+          parameterNames = true,
+          rangeVariableTypes = true,
+        },
+
+        -- Formatting
+        gofumpt = true, -- Stricter gofmt
+
+        -- Organize imports
+        ['local'] = '', -- Set to your module path for local imports
+
+        -- Completion
+        usePlaceholders = true,
+        completeUnimported = true,
+
+        -- Experimental features
+        experimentalPostfixCompletions = true,
       },
-
-      -- Static check analyzers
-      staticcheck = true,
-
-      -- Code lens
-      codelenses = {
-        gc_details = true,
-        generate = true,
-        regenerate_cgo = true,
-        test = true,
-        tidy = true,
-        upgrade_dependency = true,
-        vendor = true,
-      },
-
-      -- Hints
-      hints = {
-        assignVariableTypes = true,
-        compositeLiteralFields = true,
-        compositeLiteralTypes = true,
-        constantValues = true,
-        functionTypeParameters = true,
-        parameterNames = true,
-        rangeVariableTypes = true,
-      },
-
-      -- Formatting
-      gofumpt = true, -- Stricter gofmt
-
-      -- Organize imports
-      ['local'] = '', -- Set to your module path for local imports
-
-      -- Completion
-      usePlaceholders = true,
-      completeUnimported = true,
-
-      -- Experimental features
-      experimentalPostfixCompletions = true,
     },
-  },
 
-  -- File types
-  filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
+    -- File types
+    filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
 
     -- Root directory detection
     root_dir = lspconfig.util.root_pattern('go.work', 'go.mod', '.git'),
   })
 end)
+
+-- Restore notify
+vim.notify = old_notify
 
 if not setup_ok then
   return

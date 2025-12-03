@@ -49,34 +49,34 @@ if not _G.lsp_on_attach or not _G.lsp_capabilities then
   return
 end
 
--- Safely setup pyright
-pcall(function()
+-- Setup pyright if available
+if vim.fn.executable('pyright') == 1 or vim.fn.executable('pyright-langserver') == 1 then
   lspconfig.pyright.setup({
-  on_attach = _G.lsp_on_attach,
-  capabilities = _G.lsp_capabilities,
-  settings = {
-    python = {
-      pythonPath = python_path,
-      analysis = {
-        typeCheckingMode = 'basic',
-        autoSearchPaths = true,
-        useLibraryCodeForTypes = true,
-        diagnosticMode = 'workspace',
+    on_attach = _G.lsp_on_attach,
+    capabilities = _G.lsp_capabilities,
+    settings = {
+      python = {
+        pythonPath = python_path,
+        analysis = {
+          typeCheckingMode = 'basic',
+          autoSearchPaths = true,
+          useLibraryCodeForTypes = true,
+          diagnosticMode = 'workspace',
+        }
       }
-    }
-  },
+    },
     before_init = function(_, config)
       -- Update pythonPath on each LSP start (in case venv changes)
       config.settings.python.pythonPath = find_python_venv()
     end,
   })
-end)
+end
 
 -- ============================================================================
 -- Ruff LSP - Fast Linting
 -- ============================================================================
 
-pcall(function()
+if vim.fn.executable('ruff') == 1 or vim.fn.executable('ruff-lsp') == 1 then
   lspconfig.ruff.setup({
     on_attach = function(client, bufnr)
       -- Disable hover in favor of Pyright
@@ -85,4 +85,42 @@ pcall(function()
     end,
     capabilities = _G.lsp_capabilities,
   })
-end)
+end
+
+-- ============================================================================
+-- Python Keybindings
+-- ============================================================================
+
+local augroup = vim.api.nvim_create_augroup
+local autocmd = vim.api.nvim_create_autocmd
+
+-- Python-specific keybindings
+autocmd('FileType', {
+  group = augroup('PythonKeybindings', { clear = true }),
+  pattern = 'python',
+  callback = function()
+    local opts = { buffer = true, noremap = true, silent = true }
+
+    -- Run Python file with uv (reuses terminal)
+    vim.keymap.set('n', '<leader>r', function()
+      -- Close any existing terminal buffers first
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.bo[buf].buftype == 'terminal' then
+          vim.api.nvim_buf_delete(buf, { force = true })
+        end
+      end
+      vim.cmd('split | term uv run %')
+    end, vim.tbl_extend('force', opts, { desc = 'Run Python file (uv)' }))
+
+    -- Run Python file with uv in vertical split (reuses terminal)
+    vim.keymap.set('n', '<leader>R', function()
+      -- Close any existing terminal buffers first
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.bo[buf].buftype == 'terminal' then
+          vim.api.nvim_buf_delete(buf, { force = true })
+        end
+      end
+      vim.cmd('vsplit | term uv run %')
+    end, vim.tbl_extend('force', opts, { desc = 'Run Python file (uv vsplit)' }))
+  end,
+})

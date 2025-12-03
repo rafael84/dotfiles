@@ -62,6 +62,26 @@ Leader: `,` (comma)
 
 Press `<Leader>` and wait to see everything.
 
+## Language-Specific Keybindings
+
+### Python
+
+| Key | Action |
+|-----|--------|
+| `<Leader>r` | Run file with `uv run` (horizontal split) |
+| `<Leader>R` | Run file with `uv run` (vertical split) |
+
+### Go
+
+| Key | Action |
+|-----|--------|
+| `<Leader>r` | Run file |
+| `<Leader>b` | Build file |
+| `<Leader>t` | Run tests |
+| `<Leader>tf` | Run test function |
+| `<Leader>a` | Alternate file (switch test/impl) |
+| `<Leader>c` | Toggle coverage |
+
 ## Common Tasks
 
 ### Edit Settings
