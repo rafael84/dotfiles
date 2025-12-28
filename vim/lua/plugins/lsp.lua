@@ -46,7 +46,7 @@ require('mason-lspconfig').setup({
   automatic_installation = true,
   -- Exclude servers that are manually configured in language-specific files
   automatic_enable = {
-    exclude = { 'pyright', 'ruff', 'ts_ls', 'eslint' }
+    exclude = { 'pyright', 'ruff', 'ts_ls', 'eslint', 'clangd', 'gopls' }
   },
 })
 
