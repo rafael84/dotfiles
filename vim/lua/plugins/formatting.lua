@@ -32,6 +32,10 @@ require('conform').setup({
     -- Go (gopls handles formatting via LSP, but these are fallbacks)
     go = { 'gofumpt', 'goimports' },
 
+    -- C/C++
+    c = { 'clang_format' },
+    cpp = { 'clang_format' },
+
     -- Lua
     lua = { 'stylua' },
   },
@@ -53,6 +57,12 @@ require('conform').setup({
     ruff_organize_imports = {
       command = 'ruff',
       args = { 'check', '--select', 'I', '--fix', '--stdin-filename', '$FILENAME', '-' },
+    },
+    clang_format = {
+      command = 'clang-format',
+      args = {
+        '--style={BasedOnStyle: LLVM, IndentWidth: 4, TabWidth: 4, UseTab: Never, ColumnLimit: 100}',
+      },
     },
   },
 })

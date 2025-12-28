@@ -36,7 +36,7 @@ local setup_ok, err = pcall(function()
       '--header-insertion=iwyu',
       '--completion-style=detailed',
       '--function-arg-placeholders',
-      '--fallback-style=llvm',
+      '--fallback-style={BasedOnStyle: LLVM, IndentWidth: 4, TabWidth: 4, UseTab: Never}',
     },
     init_options = {
       usePlaceholders = true,
@@ -66,6 +66,35 @@ end
 -- ============================================================================
 -- Helper Commands
 -- ============================================================================
+
+-- Command to generate .clang-format file
+vim.api.nvim_create_user_command('CGenClangFormat', function()
+  local cwd = vim.fn.getcwd()
+  local filepath = cwd .. '/.clang-format'
+
+  local content = [[---
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: false
+IndentCaseLabels: false
+]]
+
+  local file = io.open(filepath, 'w')
+  if not file then
+    vim.notify('Failed to create .clang-format', vim.log.levels.ERROR)
+    return
+  end
+
+  file:write(content)
+  file:close()
+
+  vim.notify('Created ' .. filepath, vim.log.levels.INFO)
+  vim.notify('Restart LSP with :LspRestart to apply changes', vim.log.levels.INFO)
+end, { desc = 'Generate .clang-format with 4 spaces' })
 
 -- Command to generate compile_flags.txt for pkg-config libraries
 vim.api.nvim_create_user_command('CGenCompileFlags', function(opts)
@@ -132,14 +161,8 @@ end, {
 local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
--- Format on save
-autocmd('BufWritePre', {
-  group = augroup('CFormat', { clear = true }),
-  pattern = { '*.c', '*.h', '*.cpp', '*.hpp' },
-  callback = function()
-    vim.lsp.buf.format({ async = false })
-  end,
-})
+-- Format on save is handled by conform.nvim (formatting.lua)
+-- No need for LSP format on save here
 
 -- C-specific keybindings
 autocmd('FileType', {
@@ -147,6 +170,10 @@ autocmd('FileType', {
   pattern = { 'c', 'cpp' },
   callback = function()
     local opts = { buffer = true, noremap = true, silent = true }
+
+    -- Generate .clang-format with 4 spaces
+    vim.keymap.set('n', '<leader>cF', ':CGenClangFormat<CR>',
+      vim.tbl_extend('force', opts, { desc = 'Generate .clang-format (4 spaces)' }))
 
     -- Generate compile_flags.txt for raylib (common use case)
     vim.keymap.set('n', '<leader>cf', ':CGenCompileFlags raylib<CR>',
