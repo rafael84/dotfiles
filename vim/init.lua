@@ -24,6 +24,7 @@ require('plugins.diagnostics') -- Diagnostics (trouble.nvim)
 require('plugins.testing')     -- Testing (neotest)
 
 -- Load language-specific configurations
+require('plugins.languages.c')
 require('plugins.languages.go')
 require('plugins.languages.python')
 require('plugins.languages.javascript')

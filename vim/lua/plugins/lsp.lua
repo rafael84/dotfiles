@@ -37,6 +37,7 @@ require('mason-lspconfig').setup({
     'eslint',
     'bashls',
     'gopls',
+    'clangd',
     'clojure_lsp',
     'jsonls',
     'html',
@@ -136,6 +137,25 @@ vim.diagnostic.config({
   virtual_text = {
     prefix = '●',
     spacing = 4,
+    -- Show error code in noqa-friendly format
+    format = function(diagnostic)
+      local code = diagnostic.code or ''
+      local source = diagnostic.source or ''
+
+      -- For Ruff errors, show code first (for easy noqa usage)
+      if source:lower():match('ruff') and code ~= '' then
+        return string.format('[%s] %s', code, diagnostic.message)
+      -- For other sources (pyright, etc), show source name
+      elseif source ~= '' and code ~= '' then
+        return string.format('%s [%s]: %s', source, code, diagnostic.message)
+      elseif code ~= '' then
+        return string.format('[%s]: %s', code, diagnostic.message)
+      elseif source ~= '' then
+        return string.format('%s: %s', source, diagnostic.message)
+      end
+
+      return diagnostic.message
+    end,
   },
   signs = {
     text = {
@@ -153,6 +173,25 @@ vim.diagnostic.config({
     source = 'always',
     header = '',
     prefix = '',
+    -- Show error code in noqa-friendly format
+    format = function(diagnostic)
+      local code = diagnostic.code or ''
+      local source = diagnostic.source or ''
+
+      -- For Ruff errors, show code first (for easy noqa usage)
+      if source:lower():match('ruff') and code ~= '' then
+        return string.format('[%s] %s\n\nTo suppress: # noqa: %s', code, diagnostic.message, code)
+      -- For other sources (pyright, etc), show source name
+      elseif source ~= '' and code ~= '' then
+        return string.format('%s [%s]: %s', source, code, diagnostic.message)
+      elseif code ~= '' then
+        return string.format('[%s]: %s', code, diagnostic.message)
+      elseif source ~= '' then
+        return string.format('%s: %s', source, diagnostic.message)
+      end
+
+      return diagnostic.message
+    end,
   },
 })
 
