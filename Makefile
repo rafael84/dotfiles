@@ -27,6 +27,7 @@ check-deps:
 	@command -v shfmt >/dev/null 2>&1 && echo "✓ shfmt" || echo "✗ shfmt"
 	@command -v stylua >/dev/null 2>&1 && echo "✓ stylua" || echo "✗ stylua"
 	@command -v gofumpt >/dev/null 2>&1 && echo "✓ gofumpt" || echo "✗ gofumpt"
+	@command -v clang-format >/dev/null 2>&1 && echo "✓ clang-format" || echo "✗ clang-format"
 
 install-deps:
 	@echo "Installing/upgrading dependencies..."
@@ -38,6 +39,7 @@ install-deps:
 	@brew install shfmt
 	@brew install stylua
 	@brew install gofumpt
+	@brew install clang-format
 	@echo "✓ All dependencies installed"
 
 link:
@@ -57,12 +59,18 @@ link:
 	fi
 	@ln -sf $(VIM_DIR)/init.lua $(NVIM_CONFIG_DIR)/init.lua
 	@ln -sf $(VIM_DIR)/lua $(NVIM_CONFIG_DIR)/lua
+	@if [ -e $(HOME)/.clang-format ] && [ ! -L $(HOME)/.clang-format ]; then \
+		echo "Backing up existing .clang-format to .clang-format.backup"; \
+		mv $(HOME)/.clang-format $(HOME)/.clang-format.backup; \
+	fi
+	@ln -sf $(DOTFILES_DIR)/.clang-format $(HOME)/.clang-format
 	@echo "✓ Symlinks created"
 
 unlink:
 	@echo "Removing symlinks..."
 	@rm -f $(NVIM_CONFIG_DIR)/init.lua
 	@rm -f $(NVIM_CONFIG_DIR)/lua
+	@rm -f $(HOME)/.clang-format
 	@echo "✓ Symlinks removed"
 
 install: check-deps install-deps link
@@ -82,7 +90,7 @@ update:
 	@echo "Updating plugins..."
 	@nvim --headless +PlugUpdate +qall 2>/dev/null || true
 	@echo "Updating dependencies..."
-	@brew upgrade neovim ripgrep fd node shfmt stylua gofumpt 2>/dev/null || true
+	@brew upgrade neovim ripgrep fd node shfmt stylua gofumpt clang-format 2>/dev/null || true
 	@echo "✓ Update complete"
 
 clean:

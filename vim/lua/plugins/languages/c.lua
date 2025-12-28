@@ -36,7 +36,7 @@ local setup_ok, err = pcall(function()
       '--header-insertion=iwyu',
       '--completion-style=detailed',
       '--function-arg-placeholders',
-      '--fallback-style={BasedOnStyle: LLVM, IndentWidth: 4, TabWidth: 4, UseTab: Never}',
+      '--fallback-style=llvm',
     },
     init_options = {
       usePlaceholders = true,
@@ -77,9 +77,11 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-ColumnLimit: 100
-BreakBeforeBraces: Linux
-AllowShortIfStatementsOnASingleLine: false
+ColumnLimit: 120
+BreakBeforeBraces: Allman
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
 IndentCaseLabels: false
 ]]
 
