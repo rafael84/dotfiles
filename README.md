@@ -72,6 +72,17 @@ Leader: `,`
 | `<Leader>t` | Run tests           |
 | `<Leader>a` | Alternate test/impl |
 
+### C
+
+| Key          | Action                 |
+| ------------ | ---------------------- |
+| `<Leader>r`  | Build and run          |
+| `<Leader>R`  | Run (no rebuild)       |
+| `<Leader>b`  | Build only             |
+| `<Leader>a`  | Switch source/header   |
+| `<Leader>cF` | Generate .clang-format |
+| `<Leader>cf` | Generate compile_flags |
+
 ## Edit Config
 
 | Task     | File                           |
