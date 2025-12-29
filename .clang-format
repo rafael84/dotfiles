@@ -1,11 +1,20 @@
----
-BasedOnStyle: LLVM
-IndentWidth: 4
-TabWidth: 4
-UseTab: Never
+BasedOnStyle: Google
+
 ColumnLimit: 120
-BreakBeforeBraces: Allman
-AllowShortFunctionsOnASingleLine: None
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: false
-IndentCaseLabels: false
+IndentWidth: 4
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+InsertBraces: true
+
+IndentRequiresClause: false
+PointerAlignment: Left
+QualifierAlignment: Custom
+QualifierOrder: [inline, static, constexpr, friend, type]
+RequiresClausePosition: WithPreceding
+
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterRequiresInClause: true
