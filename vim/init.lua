@@ -23,6 +23,14 @@ require('plugins.formatting')  -- Formatting (conform.nvim)
 require('plugins.diagnostics') -- Diagnostics (trouble.nvim)
 require('plugins.testing')     -- Testing (neotest)
 
+-- Load spec viewer
+require('plugins.spec-viewer').setup({
+  width = 80,              -- Fixed width in columns
+  -- relative_width = 0.25, -- Or use 25% of screen width (uncomment to use)
+  position = 'right',      -- 'right' or 'left'
+  readonly = true,         -- Make it read-only
+})
+
 -- Load language-specific configurations
 require('plugins.languages.c')
 require('plugins.languages.go')
