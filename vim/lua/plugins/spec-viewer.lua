@@ -6,10 +6,10 @@ local M = {}
 
 -- Configuration
 local config = {
-  width = 40,              -- Width of the spec window
+  width = 80,              -- Width of the spec window
   position = 'right',      -- Position: 'right' or 'left'
-  readonly = true,         -- Make the spec window read-only
-  relative_width = nil,    -- Use percentage of screen width (e.g., 0.3 for 30%)
+  readonly = false,         -- Make the spec window read-only
+  relative_width = 0.3,    -- Use percentage of screen width (e.g., 0.3 for 30%)
 }
 
 -- State
