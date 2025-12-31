@@ -166,12 +166,88 @@ local autocmd = vim.api.nvim_create_autocmd
 -- Format on save is handled by conform.nvim (formatting.lua)
 -- No need for LSP format on save here
 
--- C-specific keybindings
+-- ============================================================================
+-- Helper Functions
+-- ============================================================================
+
+-- Close any existing terminal buffers
+local function close_terminal_buffers()
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.bo[buf].buftype == 'terminal' then
+      vim.api.nvim_buf_delete(buf, { force = true })
+    end
+  end
+end
+
+-- Find the binary target name from Makefile
+local function get_makefile_binary()
+  local makefile_name = vim.fn.filereadable('Makefile') == 1 and 'Makefile' or 'makefile'
+  local makefile_lines = vim.fn.readfile(makefile_name)
+
+  for _, line in ipairs(makefile_lines) do
+    -- Match target: dependency (skip targets with dots like .PHONY)
+    local target = line:match('^([^.][^:]*):')
+    if target then
+      return target:gsub('%s+', '') -- Remove whitespace
+    end
+  end
+
+  return nil
+end
+
+-- Check if a Makefile exists
+local function has_makefile()
+  return vim.fn.filereadable('Makefile') == 1 or vim.fn.filereadable('makefile') == 1
+end
+
+-- Run terminal command and auto-close on success
+local function run_term_with_autoclose(cmd)
+  close_terminal_buffers()
+  vim.cmd('split | term ' .. cmd)
+
+  -- Auto-close terminal buffer on success
+  vim.defer_fn(function()
+    local term_buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_create_autocmd('TermClose', {
+      buffer = term_buf,
+      callback = function()
+        local exit_code = vim.v.event.status
+        if exit_code == 0 then
+          vim.defer_fn(function()
+            if vim.api.nvim_buf_is_valid(term_buf) then
+              vim.api.nvim_buf_delete(term_buf, { force = true })
+            end
+          end, 500) -- Small delay to see the success message
+        end
+      end,
+      once = true,
+    })
+  end, 10)
+end
+
+-- Run terminal command without auto-close
+local function run_term(cmd)
+  close_terminal_buffers()
+  vim.cmd('split | term ' .. cmd)
+end
+
+-- ============================================================================
+-- Keybindings
+-- ============================================================================
+
 autocmd('FileType', {
   group = augroup('CKeybindings', { clear = true }),
   pattern = { 'c', 'cpp' },
   callback = function()
     local opts = { buffer = true, noremap = true, silent = true }
+
+    -- ============================================================================
+    -- LSP and Configuration Commands
+    -- ============================================================================
+
+    -- Switch between source and header
+    vim.keymap.set('n', '<Leader>a', ':ClangdSwitchSourceHeader<CR>',
+      vim.tbl_extend('force', opts, { desc = 'Switch source/header' }))
 
     -- Generate .clang-format with 4 spaces
     vim.keymap.set('n', '<leader>cF', ':CGenClangFormat<CR>',
@@ -181,102 +257,64 @@ autocmd('FileType', {
     vim.keymap.set('n', '<leader>cf', ':CGenCompileFlags raylib<CR>',
       vim.tbl_extend('force', opts, { desc = 'Generate compile_flags.txt (raylib)' }))
 
-    -- Switch between source and header
-    vim.keymap.set('n', '<Leader>a', ':ClangdSwitchSourceHeader<CR>',
-      vim.tbl_extend('force', opts, { desc = 'Switch source/header' }))
+    -- ============================================================================
+    -- Build and Run Commands
+    -- ============================================================================
 
     -- Build: Use Makefile if it exists, otherwise compile with gcc
     vim.keymap.set('n', '<leader>b', function()
-      local has_makefile = vim.fn.filereadable('Makefile') == 1 or vim.fn.filereadable('makefile') == 1
-
-      -- Close any existing terminal buffers first
-      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.bo[buf].buftype == 'terminal' then
-          vim.api.nvim_buf_delete(buf, { force = true })
-        end
-      end
-
-      if has_makefile then
-        vim.cmd('split | term make')
+      if has_makefile() then
+        run_term_with_autoclose('make')
       else
         local file = vim.fn.expand('%')
-        vim.cmd('split | term gcc -Wall -Wextra -g ' .. file .. ' -o ' .. vim.fn.expand('%:r'))
+        local binary = vim.fn.expand('%:r')
+        run_term_with_autoclose('gcc -Wall -Wextra -g ' .. file .. ' -o ' .. binary)
       end
-    end, vim.tbl_extend('force', opts, { desc = 'Build (make/gcc)' }))
+    end, vim.tbl_extend('force', opts, { desc = 'Build (auto-close on success)' }))
+
+    -- Build (keep buffer open)
+    vim.keymap.set('n', '<leader>B', function()
+      if has_makefile() then
+        run_term('make')
+      else
+        local file = vim.fn.expand('%')
+        local binary = vim.fn.expand('%:r')
+        run_term('gcc -Wall -Wextra -g ' .. file .. ' -o ' .. binary)
+      end
+    end, vim.tbl_extend('force', opts, { desc = 'Build (keep open)' }))
 
     -- Build and run
     vim.keymap.set('n', '<leader>r', function()
-      local has_makefile = vim.fn.filereadable('Makefile') == 1 or vim.fn.filereadable('makefile') == 1
-
-      -- Close any existing terminal buffers first
-      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.bo[buf].buftype == 'terminal' then
-          vim.api.nvim_buf_delete(buf, { force = true })
-        end
-      end
-
-      if has_makefile then
-        -- Find the binary name from Makefile target (first non-special target)
-        local makefile_name = vim.fn.filereadable('Makefile') == 1 and 'Makefile' or 'makefile'
-        local makefile_lines = vim.fn.readfile(makefile_name)
-        local binary = nil
-
-        for _, line in ipairs(makefile_lines) do
-          -- Match target: dependency (skip targets with dots like .PHONY)
-          local target = line:match('^([^.][^:]*):')
-          if target then
-            binary = target:gsub('%s+', '') -- Remove whitespace
-            break
-          end
-        end
-
+      if has_makefile() then
+        local binary = get_makefile_binary()
         if binary and binary ~= '' then
-          vim.cmd('split | term make && ./' .. binary)
+          run_term_with_autoclose('make && ./' .. binary)
         else
           vim.notify('Could not find binary target in Makefile', vim.log.levels.WARN)
-          vim.cmd('split | term make')
+          run_term_with_autoclose('make')
         end
       else
+        local file = vim.fn.expand('%')
         local binary = vim.fn.expand('%:r')
-        vim.cmd('split | term gcc -Wall -Wextra -g ' .. vim.fn.expand('%') .. ' -o ' .. binary .. ' && ./' .. binary)
+        run_term_with_autoclose('gcc -Wall -Wextra -g ' .. file .. ' -o ' .. binary .. ' && ./' .. binary)
       end
-    end, vim.tbl_extend('force', opts, { desc = 'Build and run' }))
+    end, vim.tbl_extend('force', opts, { desc = 'Build and run (auto-close on success)' }))
 
-    -- Run without rebuilding (useful if you just built)
+    -- Build and run (keep buffer open to see output)
     vim.keymap.set('n', '<leader>R', function()
-      local has_makefile = vim.fn.filereadable('Makefile') == 1 or vim.fn.filereadable('makefile') == 1
-
-      -- Close any existing terminal buffers first
-      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.bo[buf].buftype == 'terminal' then
-          vim.api.nvim_buf_delete(buf, { force = true })
-        end
-      end
-
-      if has_makefile then
-        -- Find the binary name from Makefile target
-        local makefile_name = vim.fn.filereadable('Makefile') == 1 and 'Makefile' or 'makefile'
-        local makefile_lines = vim.fn.readfile(makefile_name)
-        local binary = nil
-
-        for _, line in ipairs(makefile_lines) do
-          -- Match target: dependency (skip targets with dots like .PHONY)
-          local target = line:match('^([^.][^:]*):')
-          if target then
-            binary = target:gsub('%s+', '') -- Remove whitespace
-            break
-          end
-        end
-
+      if has_makefile() then
+        local binary = get_makefile_binary()
         if binary and binary ~= '' then
-          vim.cmd('split | term ./' .. binary)
+          run_term('make && ./' .. binary)
         else
-          vim.notify('Could not find binary name in Makefile', vim.log.levels.WARN)
+          vim.notify('Could not find binary target in Makefile', vim.log.levels.WARN)
+          run_term('make')
         end
       else
+        local file = vim.fn.expand('%')
         local binary = vim.fn.expand('%:r')
-        vim.cmd('split | term ./' .. binary)
+        run_term('gcc -Wall -Wextra -g ' .. file .. ' -o ' .. binary .. ' && ./' .. binary)
       end
-    end, vim.tbl_extend('force', opts, { desc = 'Run (no rebuild)' }))
+    end, vim.tbl_extend('force', opts, { desc = 'Build and run (keep open)' }))
   end,
 })
