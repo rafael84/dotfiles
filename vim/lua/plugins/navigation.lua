@@ -135,3 +135,13 @@ vim.g.rg_derive_root = 1
 
 map('n', 'g*', ':Rg <CR>', opts)
 map('v', 'g*', ':call RgVisual() <CR>', opts)
+
+-- ============================================================================
+-- vim-fugitive - Open file on GitHub
+-- ============================================================================
+
+-- Open current file on GitHub (with current line highlighted)
+-- Uses vim-fugitive's :GBrowse command
+map('n', '<leader>gh', ':GBrowse<CR>', opts)
+-- Open current file on GitHub (with selected lines highlighted in visual mode)
+map('v', '<leader>gh', ':GBrowse<CR>', opts)

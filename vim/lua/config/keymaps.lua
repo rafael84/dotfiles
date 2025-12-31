@@ -100,6 +100,21 @@ map('n', 'q:', ':q', opts)
 map('n', 'Zz', '<c-w>_ | <c-w>|', opts)
 map('n', 'Zo', '<c-w>=', opts)
 
+-- Open :messages in a buffer for easy copying
+vim.api.nvim_create_user_command('Messages', function()
+  local messages = vim.fn.execute('messages')
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(messages, '\n'))
+  vim.api.nvim_buf_set_option(buf, 'buftype', 'nofile')
+  vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
+  vim.api.nvim_buf_set_option(buf, 'filetype', 'messages')
+  vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+  vim.cmd('vsplit')
+  vim.api.nvim_win_set_buf(0, buf)
+end, {})
+
+map('n', '<Leader>M', ':Messages<CR>', opts)
+
 -- ============================================================================
 -- Function Keys
 -- ============================================================================

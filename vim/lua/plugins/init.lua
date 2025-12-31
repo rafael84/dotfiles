@@ -45,7 +45,6 @@ vim.fn['plug#']('nvim-telescope/telescope.nvim', { tag = '0.1.8' })          -- 
 vim.fn['plug#']('nvim-telescope/telescope-fzf-native.nvim', { ['do'] = 'make' }) -- FZF for Telescope
 vim.fn['plug#']('scrooloose/nerdtree')                                       -- File tree
 vim.fn['plug#']('jremmen/vim-ripgrep')                                       -- Ripgrep integration
-vim.fn['plug#']('k0kubun/vim-open-github')                                   -- Open GitHub URLs
 
 -- ============================================================================
 -- UI and Visual
@@ -111,6 +110,7 @@ vim.fn['plug#']('marilari88/neotest-vitest')          -- Vitest adapter
 -- ============================================================================
 
 vim.fn['plug#']('tpope/vim-fugitive')                 -- Git integration
+vim.fn['plug#']('tpope/vim-rhubarb')                  -- GitHub support for fugitive (enables :GBrowse)
 vim.fn['plug#']('junegunn/gv.vim')                    -- Git commit browser
 
 -- ============================================================================
