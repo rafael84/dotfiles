@@ -18,7 +18,12 @@ end
 -- Mason - LSP/Formatter/Linter Installer
 -- ============================================================================
 
-require('mason').setup({
+local status_ok, mason = pcall(require, 'mason')
+if not status_ok then
+  return
+end
+
+mason.setup({
   ui = {
     icons = {
       package_installed = '✓',
@@ -29,7 +34,12 @@ require('mason').setup({
 })
 
 -- Mason installs and auto-enables servers, except those we configure manually
-require('mason-lspconfig').setup({
+local status_ok2, mason_lspconfig = pcall(require, 'mason-lspconfig')
+if not status_ok2 then
+  return
+end
+
+mason_lspconfig.setup({
   ensure_installed = {
     'pyright',
     'ruff',
@@ -119,7 +129,12 @@ local on_attach = function(client, bufnr)
 end
 
 -- LSP Capabilities (for nvim-cmp)
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local status_ok3, cmp_nvim_lsp = pcall(require, 'cmp_nvim_lsp')
+if not status_ok3 then
+  return
+end
+
+local capabilities = cmp_nvim_lsp.default_capabilities()
 
 -- Set consistent position encoding to avoid warnings
 capabilities.general = capabilities.general or {}
@@ -199,7 +214,12 @@ vim.diagnostic.config({
 -- nvim-lint - Additional Linting
 -- ============================================================================
 
-require('lint').linters_by_ft = {
+local status_ok4, lint = pcall(require, 'lint')
+if not status_ok4 then
+  return
+end
+
+lint.linters_by_ft = {
   -- Most linting is handled by LSP
   -- Add custom linters here if needed
 }
@@ -207,9 +227,13 @@ require('lint').linters_by_ft = {
 -- Lint on file save
 vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
   callback = function()
-    local linters = require('lint').linters_by_ft[vim.bo.filetype] or {}
+    local ok, lint_module = pcall(require, 'lint')
+    if not ok then
+      return
+    end
+    local linters = lint_module.linters_by_ft[vim.bo.filetype] or {}
     if #linters > 0 then
-      require('lint').try_lint()
+      lint_module.try_lint()
     end
   end,
 })

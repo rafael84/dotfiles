@@ -2,7 +2,12 @@
 -- conform.nvim - Code Formatting
 -- ============================================================================
 
-require('conform').setup({
+local status_ok, conform = pcall(require, 'conform')
+if not status_ok then
+  return
+end
+
+conform.setup({
   formatters_by_ft = {
     -- Python
     python = function(bufnr)

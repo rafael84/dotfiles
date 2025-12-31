@@ -70,14 +70,22 @@ vim.g.tagbar_type_go = {
 -- Telescope - Fuzzy Finder
 -- ============================================================================
 
-require('telescope').setup({
+local status_ok, telescope = pcall(require, 'telescope')
+if not status_ok then
+  return
+end
+
+telescope.setup({
   defaults = {
     mappings = {
       i = {
-        ['<C-j>'] = require('telescope.actions').move_selection_next,
-        ['<C-k>'] = require('telescope.actions').move_selection_previous,
-        ['<C-q>'] = require('telescope.actions').send_to_qflist + require('telescope.actions').open_qflist,
-        ['<Esc>'] = require('telescope.actions').close,
+        ['<C-j>'] = function(...) return require('telescope.actions').move_selection_next(...) end,
+        ['<C-k>'] = function(...) return require('telescope.actions').move_selection_previous(...) end,
+        ['<C-q>'] = function(...)
+          local actions = require('telescope.actions')
+          return (actions.send_to_qflist + actions.open_qflist)(...)
+        end,
+        ['<Esc>'] = function(...) return require('telescope.actions').close(...) end,
       },
     },
     prompt_prefix = '🔍 ',
@@ -112,7 +120,7 @@ require('telescope').setup({
 })
 
 -- Load extensions
-require('telescope').load_extension('fzf')
+pcall(telescope.load_extension, 'fzf')
 
 -- Keybindings
 map('n', '<C-p>', ':Telescope find_files<CR>', opts)

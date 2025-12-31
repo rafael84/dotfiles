@@ -61,8 +61,9 @@ vim.fn['plug#']('nvim-tree/nvim-web-devicons')        -- Icons
 -- Syntax and Treesitter
 -- ============================================================================
 
+-- Note: nvim-treesitter-textobjects removed due to API incompatibility
+-- If needed later, must pin both treesitter and textobjects to matching old versions
 vim.fn['plug#']('nvim-treesitter/nvim-treesitter', { ['do'] = ':TSUpdate' })
-vim.fn['plug#']('nvim-treesitter/nvim-treesitter-textobjects')
 
 -- ============================================================================
 -- LSP and Completion
@@ -131,6 +132,9 @@ vim.fn['plug#']('bakpakin/fennel.vim')
 
 -- Web
 vim.fn['plug#']('othree/html5.vim')
+
+-- Markdown
+vim.fn['plug#']('iamcco/markdown-preview.nvim', { ['do'] = 'cd app && npx --yes yarn install' })
 
 -- Misc Languages
 vim.fn['plug#']('keith/swift.vim')

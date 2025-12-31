@@ -189,7 +189,11 @@ autocmd('FileType', {
 })
 
 -- Register Go-specific keybindings with which-key
-local wk = require('which-key')
+local status_ok, wk = pcall(require, 'which-key')
+if not status_ok then
+  return
+end
+
 wk.add({
   { '<leader>g', group = 'Go', mode = 'n', cond = function() return vim.bo.filetype == 'go' end },
   { '<leader>gt', desc = 'Go to type definition', cond = function() return vim.bo.filetype == 'go' end },

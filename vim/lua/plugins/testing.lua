@@ -2,7 +2,12 @@
 -- Neotest - Modern Test Runner
 -- ============================================================================
 
-require('neotest').setup({
+local status_ok, neotest = pcall(require, 'neotest')
+if not status_ok then
+  return
+end
+
+neotest.setup({
   -- Enable logging for debugging
   log_level = vim.log.levels.DEBUG,
 
@@ -107,7 +112,10 @@ require('neotest').setup({
 -- Keybindings (registered in diagnostics.lua with which-key)
 -- ============================================================================
 
-local wk = require('which-key')
+local status_ok2, wk = pcall(require, 'which-key')
+if not status_ok2 then
+  return
+end
 
 wk.add({
   -- Testing

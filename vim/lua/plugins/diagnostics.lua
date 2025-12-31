@@ -6,7 +6,12 @@
 -- trouble.nvim - Better Diagnostics UI
 -- ============================================================================
 
-require('trouble').setup({
+local status_ok, trouble = pcall(require, 'trouble')
+if not status_ok then
+  return
+end
+
+trouble.setup({
   icons = true,
   fold_open = '▾',
   fold_closed = '▸',
@@ -34,7 +39,10 @@ map('n', '<leader>xr', ':Trouble lsp_references toggle<CR>', opts)
 -- which-key.nvim - Show Keybindings
 -- ============================================================================
 
-local wk = require('which-key')
+local status_ok2, wk = pcall(require, 'which-key')
+if not status_ok2 then
+  return
+end
 
 wk.setup({
   plugins = {

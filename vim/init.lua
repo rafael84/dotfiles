@@ -29,6 +29,7 @@ require('plugins.languages.go')
 require('plugins.languages.python')
 require('plugins.languages.javascript')
 require('plugins.languages.clojure')
+require('plugins.languages.markdown')
 
 -- Load theme (must be after plugins are loaded)
 vim.cmd('colorscheme PaperColor')

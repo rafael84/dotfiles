@@ -2,7 +2,13 @@
 -- Treesitter Configuration
 -- ============================================================================
 
-require('nvim-treesitter.configs').setup({
+-- Protect against errors if treesitter is not installed yet
+local status_ok, treesitter = pcall(require, 'nvim-treesitter')
+if not status_ok then
+  return
+end
+
+treesitter.setup({
   -- Languages to install
   ensure_installed = {
     'python',
@@ -65,40 +71,6 @@ require('nvim-treesitter.configs').setup({
       node_incremental = '<CR>',
       scope_incremental = '<S-CR>',
       node_decremental = '<BS>',
-    },
-  },
-
-  -- Text objects
-  textobjects = {
-    select = {
-      enable = true,
-      lookahead = true,
-      keymaps = {
-        ['af'] = '@function.outer',
-        ['if'] = '@function.inner',
-        ['ac'] = '@class.outer',
-        ['ic'] = '@class.inner',
-      },
-    },
-    move = {
-      enable = true,
-      set_jumps = true,
-      goto_next_start = {
-        [']m'] = '@function.outer',
-        [']]'] = '@class.outer',
-      },
-      goto_next_end = {
-        [']M'] = '@function.outer',
-        [']['] = '@class.outer',
-      },
-      goto_previous_start = {
-        ['[m'] = '@function.outer',
-        ['[['] = '@class.outer',
-      },
-      goto_previous_end = {
-        ['[M'] = '@function.outer',
-        ['[]'] = '@class.outer',
-      },
     },
   },
 })

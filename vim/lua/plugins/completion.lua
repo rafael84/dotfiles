@@ -2,8 +2,15 @@
 -- nvim-cmp - Completion Engine
 -- ============================================================================
 
-local cmp = require('cmp')
-local luasnip = require('luasnip')
+local status_ok, cmp = pcall(require, 'cmp')
+if not status_ok then
+  return
+end
+
+local status_ok2, luasnip = pcall(require, 'luasnip')
+if not status_ok2 then
+  return
+end
 
 cmp.setup({
   snippet = {
