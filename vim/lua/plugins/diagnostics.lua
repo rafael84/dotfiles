@@ -35,6 +35,16 @@ map('n', '<leader>xq', ':Trouble quickfix toggle<CR>', opts)
 map('n', '<leader>xl', ':Trouble loclist toggle<CR>', opts)
 map('n', '<leader>xr', ':Trouble lsp_references toggle<CR>', opts)
 
+-- Send diagnostics to quickfix list
+map('n', '<leader>xQ', function()
+  vim.diagnostic.setqflist()
+end, opts)
+
+-- Send only warnings to quickfix list
+map('n', '<leader>xW', function()
+  vim.diagnostic.setqflist({ severity = vim.diagnostic.severity.WARN })
+end, opts)
+
 -- ============================================================================
 -- which-key.nvim - Show Keybindings
 -- ============================================================================
@@ -263,6 +273,8 @@ wk.add({
   { '<leader>xq', '<cmd>Trouble quickfix toggle<cr>', desc = 'Quickfix list' },
   { '<leader>xl', '<cmd>Trouble loclist toggle<cr>', desc = 'Location list' },
   { '<leader>xr', '<cmd>Trouble lsp_references toggle<cr>', desc = 'LSP references' },
+  { '<leader>xQ', function() vim.diagnostic.setqflist() end, desc = 'All diagnostics to quickfix' },
+  { '<leader>xW', function() vim.diagnostic.setqflist({ severity = vim.diagnostic.severity.WARN }) end, desc = 'Warnings to quickfix' },
 
   { '<leader>e', vim.diagnostic.open_float, desc = 'Show diagnostic' },
   { '<leader>q', vim.diagnostic.setloclist, desc = 'Diagnostics to loclist' },
