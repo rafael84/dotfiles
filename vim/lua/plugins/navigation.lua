@@ -102,6 +102,31 @@ telescope.setup({
       '.venv/',
       'venv/',
     },
+    -- Fix for Neovim 0.11+ treesitter API changes
+    buffer_previewer_maker = function(filepath, bufnr, opts)
+      opts = opts or {}
+
+      -- Simple file preview without treesitter highlighting to avoid ft_to_lang error
+      vim.loop.fs_stat(filepath, function(_, stat)
+        if not stat then return end
+        if stat.size > 100000 then
+          -- File is too large, show message
+          vim.schedule(function()
+            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { 'File too large for preview' })
+          end)
+        else
+          -- Read and display file
+          vim.schedule(function()
+            local ok = pcall(vim.fn.readfile, filepath)
+            if ok then
+              vim.api.nvim_buf_call(bufnr, function()
+                vim.cmd('silent! edit ' .. vim.fn.fnameescape(filepath))
+              end)
+            end
+          end)
+        end
+      end)
+    end,
   },
   pickers = {
     find_files = {

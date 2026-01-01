@@ -116,6 +116,26 @@ end, {})
 map('n', '<Leader>M', ':Messages<CR>', opts)
 
 -- ============================================================================
+-- Config Reload
+-- ============================================================================
+
+-- Reload Neovim config
+vim.api.nvim_create_user_command('ReloadConfig', function()
+  -- Clear Lua module cache
+  for name, _ in pairs(package.loaded) do
+    if name:match('^config') or name:match('^plugins') then
+      package.loaded[name] = nil
+    end
+  end
+
+  -- Reload the config
+  dofile(vim.env.MYVIMRC)
+  vim.notify("Config reloaded!", vim.log.levels.INFO)
+end, {})
+
+map('n', '<Leader>R', ':ReloadConfig<CR>', opts)
+
+-- ============================================================================
 -- Function Keys
 -- ============================================================================
 

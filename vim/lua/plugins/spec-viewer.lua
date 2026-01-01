@@ -37,8 +37,14 @@ end
 -- Close the spec window
 function M.close()
   if is_spec_window_open() then
-    vim.api.nvim_win_close(spec_winnr, true)
-    spec_winnr = nil
+    -- Check if this is the last window before closing
+    local win_count = #vim.api.nvim_list_wins()
+    if win_count > 1 then
+      vim.api.nvim_win_close(spec_winnr, true)
+      spec_winnr = nil
+    else
+      vim.notify("Cannot close last window", vim.log.levels.WARN)
+    end
   end
 end
 
@@ -69,9 +75,31 @@ function M.open(filepath)
     return
   end
 
-  -- Close existing window if open
+  -- If window is already open, reuse it instead of closing and reopening
   if is_spec_window_open() then
-    M.close()
+    -- Save current window
+    local current_win = vim.api.nvim_get_current_win()
+
+    -- Switch to spec window and load the new file
+    vim.api.nvim_set_current_win(spec_winnr)
+    vim.cmd('edit ' .. vim.fn.fnameescape(spec_filepath))
+    spec_bufnr = vim.api.nvim_get_current_buf()
+
+    -- Reconfigure the buffer
+    if config.readonly then
+      vim.bo[spec_bufnr].readonly = true
+      vim.bo[spec_bufnr].modifiable = false
+    end
+    vim.bo[spec_bufnr].buflisted = false
+    vim.bo[spec_bufnr].bufhidden = 'hide'
+
+    -- Return to the original window
+    if current_win ~= spec_winnr and vim.api.nvim_win_is_valid(current_win) then
+      vim.api.nvim_set_current_win(current_win)
+    end
+
+    vim.notify("Spec viewer opened: " .. vim.fn.fnamemodify(spec_filepath, ':t'))
+    return
   end
 
   -- Determine split command
