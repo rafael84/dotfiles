@@ -141,6 +141,17 @@ map('n', '<leader>sf', function() require('plugins.spec-viewer').focus() end, { 
 map('n', '<leader>sc', function() require('plugins.spec-viewer').close() end, { desc = 'Close spec window' })
 
 -- ============================================================================
+-- Quickfix / Compilation Errors
+-- ============================================================================
+
+map('n', '[q', ':cprev<CR>', opts)
+map('n', ']q', ':cnext<CR>', opts)
+map('n', '[Q', ':cfirst<CR>', opts)
+map('n', ']Q', ':clast<CR>', opts)
+map('n', '<leader>qo', ':copen<CR>', opts)
+map('n', '<leader>qc', ':cclose<CR>', opts)
+
+-- ============================================================================
 -- Diagnostics - Trouble
 -- ============================================================================
 
@@ -295,68 +306,100 @@ vim.api.nvim_create_autocmd('FileType', {
     vim.keymap.set('n', '<leader>cF', ':CGenClangFormat<CR>', buf_opts)
     vim.keymap.set('n', '<leader>cf', ':CGenCompileFlags raylib<CR>', buf_opts)
 
-    -- Build only (auto-close on success)
+    -- Build only (uses quickfix for errors)
     vim.keymap.set('n', '<leader>b', function()
       vim.cmd('write')
+      -- Clear previous quickfix list
+      vim.fn.setqflist({})
+
       if vim.fn.filereadable('Makefile') == 1 then
-        run_term_with_autoclose('make')
+        vim.cmd('silent! make!')
       else
         local file = vim.fn.expand('%')
         local binary = vim.fn.expand('%:r')
         local cflags = get_cflags()
-        run_term_with_autoclose('gcc -Wall -Wextra -g ' .. cflags .. ' ' .. file .. ' -o ' .. binary)
+        vim.o.makeprg = 'gcc -Wall -Wextra -g ' .. cflags .. ' ' .. file .. ' -o ' .. binary
+        vim.cmd('silent! make!')
       end
+
+      -- Redraw screen to clear any prompts
+      vim.cmd('redraw!')
+
+      -- Check quickfix list after a brief delay to ensure it's populated
+      vim.defer_fn(function()
+        local qflist = vim.fn.getqflist()
+        -- Filter for actual errors (entries with valid bufnr or type)
+        local has_errors = false
+        for _, item in ipairs(qflist) do
+          if item.valid == 1 and item.bufnr > 0 then
+            has_errors = true
+            break
+          end
+        end
+
+        if has_errors then
+          -- Build failed, open quickfix
+          vim.cmd('copen')
+        else
+          -- Build successful, close quickfix
+          vim.cmd('cclose')
+          vim.notify('Build successful!', vim.log.levels.INFO)
+        end
+      end, 50)
     end, buf_opts)
 
-    -- Build only (keep terminal open)
-    vim.keymap.set('n', '<leader>B', function()
-      vim.cmd('write')
-      if vim.fn.filereadable('Makefile') == 1 then
-        run_term('make')
-      else
-        local file = vim.fn.expand('%')
-        local binary = vim.fn.expand('%:r')
-        local cflags = get_cflags()
-        run_term('gcc -Wall -Wextra -g ' .. cflags .. ' ' .. file .. ' -o ' .. binary)
-      end
-    end, buf_opts)
-
-    -- Build and run (auto-close on success)
+    -- Build and run (uses quickfix for build errors)
     vim.keymap.set('n', '<leader>r', function()
       vim.cmd('write')
-      if vim.fn.filereadable('Makefile') == 1 then
-        local binary = get_makefile_binary()
-        if binary and binary ~= '' then
-          run_term_with_autoclose('make && ./' .. binary)
-        else
-          vim.notify('Could not find binary target in Makefile', vim.log.levels.WARN)
-          run_term_with_autoclose('make')
-        end
-      else
-        local file = vim.fn.expand('%')
-        local binary = vim.fn.expand('%:r')
-        local cflags = get_cflags()
-        run_term_with_autoclose('gcc -Wall -Wextra -g ' .. cflags .. ' ' .. file .. ' -o ' .. binary .. ' && ./' .. binary)
-      end
-    end, buf_opts)
+      -- Clear previous quickfix list
+      vim.fn.setqflist({})
 
-    -- Build and run (keep terminal open)
-    vim.keymap.set('n', '<leader>R', function()
-      vim.cmd('write')
-      if vim.fn.filereadable('Makefile') == 1 then
-        local binary = get_makefile_binary()
-        if binary and binary ~= '' then
-          run_term('make && ./' .. binary)
-        else
-          vim.notify('Could not find binary target in Makefile', vim.log.levels.WARN)
-          run_term('make')
-        end
+      local has_makefile = vim.fn.filereadable('Makefile') == 1
+
+      if has_makefile then
+        vim.cmd('silent! make!')
       else
         local file = vim.fn.expand('%')
         local binary = vim.fn.expand('%:r')
         local cflags = get_cflags()
-        run_term('gcc -Wall -Wextra -g ' .. cflags .. ' ' .. file .. ' -o ' .. binary .. ' && ./' .. binary)
+        vim.o.makeprg = 'gcc -Wall -Wextra -g ' .. cflags .. ' ' .. file .. ' -o ' .. binary
+        vim.cmd('silent! make!')
       end
+
+      -- Redraw screen to clear any prompts
+      vim.cmd('redraw!')
+
+      -- Check quickfix list after a brief delay to ensure it's populated
+      vim.defer_fn(function()
+        local qflist = vim.fn.getqflist()
+        -- Filter for actual errors (entries with valid bufnr or type)
+        local has_errors = false
+        for _, item in ipairs(qflist) do
+          if item.valid == 1 and item.bufnr > 0 then
+            has_errors = true
+            break
+          end
+        end
+
+        if has_errors then
+          -- Build failed, open quickfix
+          vim.cmd('copen')
+        else
+          -- Build succeeded, close quickfix and run
+          vim.cmd('cclose')
+          if has_makefile then
+            local binary = get_makefile_binary()
+            if binary and binary ~= '' then
+              run_term('./' .. binary)
+            else
+              vim.notify('Could not find binary target in Makefile', vim.log.levels.WARN)
+            end
+          else
+            local binary = vim.fn.expand('%:r')
+            run_term('./' .. binary)
+          end
+        end
+      end, 50)
     end, buf_opts)
   end
 })
