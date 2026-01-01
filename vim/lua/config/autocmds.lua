@@ -79,6 +79,17 @@ autocmd({ 'BufNewFile', 'BufRead' }, {
 })
 
 -- ============================================================================
+-- C/C++ Header Files
+-- ============================================================================
+
+-- Ensure .h files are detected as C (not cpp)
+autocmd({ 'BufNewFile', 'BufRead' }, {
+  group = augroup('CHeaders', { clear = true }),
+  pattern = '*.h',
+  command = 'set filetype=c',
+})
+
+-- ============================================================================
 -- Highlight Trailing Whitespace
 -- ============================================================================
 

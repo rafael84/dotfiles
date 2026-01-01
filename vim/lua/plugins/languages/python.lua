@@ -237,40 +237,6 @@ autocmd('FileType', {
   group = augroup('PythonKeybindings', { clear = true }),
   pattern = 'python',
   callback = function()
-    local opts = { buffer = true, noremap = true, silent = true }
-
-    -- Show Python LSP info
-    vim.keymap.set('n', '<leader>pi', ':PyInfo<CR>',
-      vim.tbl_extend('force', opts, { desc = 'Show Python LSP info' }))
-
-    -- Clean all Python LSP clients
-    vim.keymap.set('n', '<leader>pc', ':PyCleanLsp<CR>',
-      vim.tbl_extend('force', opts, { desc = 'Clean Python LSP clients' }))
-
-    -- Reload LSP with current venv
-    vim.keymap.set('n', '<leader>pr', ':PyReloadLsp<CR>',
-      vim.tbl_extend('force', opts, { desc = 'Reload Python LSP' }))
-
-    -- Run Python file with uv (reuses terminal)
-    vim.keymap.set('n', '<leader>r', function()
-      -- Close any existing terminal buffers first
-      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.bo[buf].buftype == 'terminal' then
-          vim.api.nvim_buf_delete(buf, { force = true })
-        end
-      end
-      vim.cmd('split | term uv run %')
-    end, vim.tbl_extend('force', opts, { desc = 'Run Python file (uv)' }))
-
-    -- Run Python file with uv in vertical split (reuses terminal)
-    vim.keymap.set('n', '<leader>R', function()
-      -- Close any existing terminal buffers first
-      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-        if vim.bo[buf].buftype == 'terminal' then
-          vim.api.nvim_buf_delete(buf, { force = true })
-        end
-      end
-      vim.cmd('vsplit | term uv run %')
-    end, vim.tbl_extend('force', opts, { desc = 'Run Python file (uv vsplit)' }))
+    -- Keymaps are defined in config/keymaps.lua
   end,
 })

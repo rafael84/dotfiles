@@ -25,25 +25,7 @@ trouble.setup({
   use_diagnostic_signs = true,
 })
 
--- Keybindings
-local map = vim.keymap.set
-local opts = { noremap = true, silent = true }
-
-map('n', '<leader>xx', ':Trouble diagnostics toggle<CR>', opts)
-map('n', '<leader>xw', ':Trouble diagnostics toggle filter.buf=0<CR>', opts)
-map('n', '<leader>xq', ':Trouble quickfix toggle<CR>', opts)
-map('n', '<leader>xl', ':Trouble loclist toggle<CR>', opts)
-map('n', '<leader>xr', ':Trouble lsp_references toggle<CR>', opts)
-
--- Send diagnostics to quickfix list
-map('n', '<leader>xQ', function()
-  vim.diagnostic.setqflist()
-end, opts)
-
--- Send only warnings to quickfix list
-map('n', '<leader>xW', function()
-  vim.diagnostic.setqflist({ severity = vim.diagnostic.severity.WARN })
-end, opts)
+-- Keybindings are defined in config/keymaps.lua
 
 -- ============================================================================
 -- which-key.nvim - Show Keybindings
@@ -205,6 +187,7 @@ wk.add({
   { '<leader>fm', '<cmd>Format<cr>', desc = 'Format buffer' },
 
   -- Dynamic buffer navigation with numbered keys
+  -- Exclude for filetypes that use <leader>b for building (C, C++, Go, Python)
   { '<leader>b',
     group = function()
       local bufs = vim.fn.getbufinfo({ buflisted = 1 })
@@ -212,6 +195,10 @@ wk.add({
     end,
     expand = function()
       return require("which-key.extras").expand.buf()
+    end,
+    cond = function()
+      local ft = vim.bo.filetype
+      return not vim.tbl_contains({ 'c', 'cpp', 'go', 'python' }, ft)
     end
   },
 
@@ -251,7 +238,13 @@ wk.add({
     cond = function() return #vim.lsp.get_clients({ bufnr = 0 }) > 0 end },
 
   -- Keep old mappings for compatibility
-  { '<leader>r', group = 'Refactor' },
+  -- Exclude for filetypes that use <leader>r for running (C, C++, Go, Python)
+  { '<leader>r', group = 'Refactor',
+    cond = function()
+      local ft = vim.bo.filetype
+      return not vim.tbl_contains({ 'c', 'cpp', 'go', 'python' }, ft)
+    end
+  },
   { '<leader>rn', vim.lsp.buf.rename, desc = 'Rename symbol' },
   { '<leader>c', group = 'Code' },
   { '<leader>ca', vim.lsp.buf.code_action, desc = 'Code action' },

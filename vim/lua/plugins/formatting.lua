@@ -75,6 +75,4 @@ vim.api.nvim_create_user_command('Format', function(args)
   require('conform').format({ async = true, lsp_fallback = true, range = range })
 end, { range = true })
 
--- Keybinding for manual format
-vim.keymap.set('n', '<leader>fm', ':Format<CR>', { noremap = true, silent = true })
-vim.keymap.set('v', '<leader>fm', ':Format<CR>', { noremap = true, silent = true })
+-- Keybindings are defined in config/keymaps.lua

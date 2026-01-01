@@ -220,13 +220,7 @@ function M.setup(opts)
     M.focus()
   end, { desc = 'Focus spec window' })
 
-  -- Keymaps (optional, you can customize these)
-  vim.keymap.set('n', '<leader>so', ':SpecOpen ', { desc = 'Open spec file (prompt for path)' })
-  vim.keymap.set('n', '<leader>sO', function() M.open() end, { desc = 'Open current file in spec window' })
-  vim.keymap.set('n', '<leader>st', M.toggle, { desc = 'Toggle spec window' })
-  vim.keymap.set('n', '<leader>sr', M.reload, { desc = 'Reload spec file' })
-  vim.keymap.set('n', '<leader>sf', M.focus, { desc = 'Focus spec window' })
-  vim.keymap.set('n', '<leader>sc', M.close, { desc = 'Close spec window' })
+  -- Keymaps are defined in config/keymaps.lua
 
   -- Auto-command to maintain fixed width on resize
   vim.api.nvim_create_autocmd('VimResized', {

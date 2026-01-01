@@ -26,24 +26,7 @@ end)
 -- ============================================================================
 -- vim-fireplace - Clojure REPL Integration
 -- ============================================================================
-
-local map = vim.keymap.set
-local opts = { noremap = true, silent = true }
-
-map('n', 'rr', ':Require<cr>', opts)
-map('n', 'ee', ':Eval<cr>', opts)
-
--- Go to definition for Clojure
-local augroup = vim.api.nvim_create_augroup
-local autocmd = vim.api.nvim_create_autocmd
-
-autocmd('Syntax', {
-  group = augroup('ClojureFireplace', { clear = true }),
-  pattern = 'clojure',
-  callback = function()
-    vim.keymap.set('n', 'gd', '<Plug>FireplaceDjump', { buffer = true })
-  end,
-})
+-- Keymaps are defined in config/keymaps.lua
 
 -- ============================================================================
 -- Conjure - Modern Clojure REPL

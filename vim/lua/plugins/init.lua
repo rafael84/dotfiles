@@ -41,7 +41,7 @@ vim.fn['plug#']('dhruvasagar/vim-zoom')               -- Zoom splits
 -- ============================================================================
 
 vim.fn['plug#']('nvim-lua/plenary.nvim')                                     -- Lua utilities
-vim.fn['plug#']('nvim-telescope/telescope.nvim', { tag = '0.1.8' })          -- Fuzzy finder
+vim.fn['plug#']('nvim-telescope/telescope.nvim')                             -- Fuzzy finder (latest)
 vim.fn['plug#']('nvim-telescope/telescope-fzf-native.nvim', { ['do'] = 'make' }) -- FZF for Telescope
 vim.fn['plug#']('scrooloose/nerdtree')                                       -- File tree
 vim.fn['plug#']('jremmen/vim-ripgrep')                                       -- Ripgrep integration

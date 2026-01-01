@@ -117,24 +117,7 @@ vim.g.mkdp_combine_preview_auto_refresh = 1
 -- Keymaps
 -- ============================================================================
 
-vim.api.nvim_create_autocmd('FileType', {
-  pattern = 'markdown',
-  callback = function()
-    local opts = { buffer = true, silent = true }
-
-    -- Start markdown preview
-    vim.keymap.set('n', '<leader>ms', '<Plug>MarkdownPreview',
-      vim.tbl_extend('force', opts, { desc = 'Start Markdown Preview' }))
-
-    -- Stop markdown preview
-    vim.keymap.set('n', '<leader>mS', '<Plug>MarkdownPreviewStop',
-      vim.tbl_extend('force', opts, { desc = 'Stop Markdown Preview' }))
-
-    -- Toggle markdown preview
-    vim.keymap.set('n', '<leader>mp', '<Plug>MarkdownPreviewToggle',
-      vim.tbl_extend('force', opts, { desc = 'Toggle Markdown Preview' }))
-  end,
-})
+-- Keymaps are defined in config/keymaps.lua
 
 -- ============================================================================
 -- Installation and Usage

@@ -11,6 +11,8 @@ end
 treesitter.setup({
   -- Languages to install
   ensure_installed = {
+    'c',
+    'cpp',
     'python',
     'javascript',
     'typescript',

@@ -1,9 +1,7 @@
 -- ============================================================================
 -- Navigation Plugins Configuration
 -- ============================================================================
-
-local map = vim.keymap.set
-local opts = { noremap = true, silent = true }
+-- Keymaps are defined in config/keymaps.lua
 
 -- ============================================================================
 -- NERDTree - File Explorer
@@ -27,15 +25,9 @@ vim.api.nvim_create_autocmd('VimEnter', {
   end,
 })
 
--- Keybindings
-map('n', '<F2>', ':NERDTreeToggle<CR>', opts)
-map('n', 'LF', ':NERDTreeFind<CR>', opts)
-
 -- ============================================================================
 -- Tagbar - Code Outline
 -- ============================================================================
-
-map('n', '<F3>', ':TagbarToggle<CR>', opts)
 
 -- Go tag configuration
 vim.g.tagbar_type_go = {
@@ -102,31 +94,6 @@ telescope.setup({
       '.venv/',
       'venv/',
     },
-    -- Fix for Neovim 0.11+ treesitter API changes
-    buffer_previewer_maker = function(filepath, bufnr, opts)
-      opts = opts or {}
-
-      -- Simple file preview without treesitter highlighting to avoid ft_to_lang error
-      vim.loop.fs_stat(filepath, function(_, stat)
-        if not stat then return end
-        if stat.size > 100000 then
-          -- File is too large, show message
-          vim.schedule(function()
-            vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { 'File too large for preview' })
-          end)
-        else
-          -- Read and display file
-          vim.schedule(function()
-            local ok = pcall(vim.fn.readfile, filepath)
-            if ok then
-              vim.api.nvim_buf_call(bufnr, function()
-                vim.cmd('silent! edit ' .. vim.fn.fnameescape(filepath))
-              end)
-            end
-          end)
-        end
-      end)
-    end,
   },
   pickers = {
     find_files = {
@@ -147,34 +114,9 @@ telescope.setup({
 -- Load extensions
 pcall(telescope.load_extension, 'fzf')
 
--- Keybindings
-map('n', '<C-p>', ':Telescope find_files<CR>', opts)
-map('n', '<leader>ff', ':Telescope find_files<CR>', opts)
-map('n', '<leader>fg', ':Telescope live_grep<CR>', opts)
-map('n', '<leader>fb', ':Telescope buffers<CR>', opts)
-map('n', '<leader>fh', ':Telescope help_tags<CR>', opts)
-map('n', '<leader>fr', ':Telescope oldfiles<CR>', opts)
-map('n', '<leader>fc', ':Telescope commands<CR>', opts)
-map('n', '<leader>fs', ':Telescope lsp_document_symbols<CR>', opts)
-map('n', '<leader>fw', ':Telescope lsp_workspace_symbols<CR>', opts)
-map('n', '<leader>fd', ':Telescope diagnostics<CR>', opts)
-
 -- ============================================================================
 -- vim-ripgrep - Search with ripgrep
 -- ============================================================================
 
 vim.g.rg_highlight = 1
 vim.g.rg_derive_root = 1
-
-map('n', 'g*', ':Rg <CR>', opts)
-map('v', 'g*', ':call RgVisual() <CR>', opts)
-
--- ============================================================================
--- vim-fugitive - Open file on GitHub
--- ============================================================================
-
--- Open current file on GitHub (with current line highlighted)
--- Uses vim-fugitive's :GBrowse command
-map('n', '<leader>gh', ':GBrowse<CR>', opts)
--- Open current file on GitHub (with selected lines highlighted in visual mode)
-map('v', '<leader>gh', ':GBrowse<CR>', opts)

@@ -166,25 +166,7 @@ autocmd('FileType', {
       end
     end
 
-    -- Go-specific commands (not provided by LSP)
-    vim.keymap.set('n', '<Leader>a', '<Plug>(go-alternate-edit)', opts)
-    vim.keymap.set('n', '<Leader>c', '<Plug>(go-coverage-toggle)', opts)
-    vim.keymap.set('n', '<leader>b', build_go_files, opts)
-    vim.keymap.set('n', '<leader>r', '<Plug>(go-run)', opts)
-    vim.keymap.set('n', '<leader>t', '<Plug>(go-test)', opts)
-    vim.keymap.set('n', '<leader>tf', '<Plug>(go-test-func)', opts)
-
-    -- Additional useful commands
-    vim.keymap.set('n', '<leader>gc', '<Plug>(go-callees)', opts)
-    vim.keymap.set('n', '<leader>gC', '<Plug>(go-callers)', opts)
-    vim.keymap.set('n', '<leader>gd', '<Plug>(go-describe)', opts)
-    vim.keymap.set('n', '<leader>ge', '<Plug>(go-iferr)', opts)
-    vim.keymap.set('n', '<leader>gf', '<Plug>(go-fill-struct)', opts)
-
-    -- LSP keybindings
-    vim.keymap.set('n', '<leader>gt', vim.lsp.buf.type_definition, opts)
-    vim.keymap.set('n', '<leader>gi', vim.lsp.buf.implementation, opts)
-    vim.keymap.set('n', '<leader>gs', vim.lsp.buf.signature_help, opts)
+    -- Keymaps are defined in config/keymaps.lua
   end,
 })
 

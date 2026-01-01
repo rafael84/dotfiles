@@ -79,7 +79,8 @@ local on_attach = function(client, bufnr)
 
   -- Documentation
   vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
-  vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
+  vim.keymap.set('n', '<leader>sh', vim.lsp.buf.signature_help, opts)
+  vim.keymap.set('i', '<C-s>', vim.lsp.buf.signature_help, opts)  -- Signature help in insert mode
 
   -- Open hover documentation in a split buffer (instead of floating window)
   vim.keymap.set('n', '<leader>K', function()
