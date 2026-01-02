@@ -26,7 +26,6 @@ vim.fn['plug#']('tpope/vim-abolish')                  -- Smart substitution
 vim.fn['plug#']('jiangmiao/auto-pairs')               -- Auto close brackets
 vim.fn['plug#']('editorconfig/editorconfig-vim')      -- EditorConfig support
 vim.fn['plug#']('AndrewRadev/sideways.vim')           -- Move function arguments
-vim.fn['plug#']('AndrewRadev/splitjoin.vim')          -- Split/join code blocks
 vim.fn['plug#']('junegunn/vim-easy-align')            -- Alignment plugin
 vim.fn['plug#']('matze/vim-move')                     -- Move lines/blocks
 vim.fn['plug#']('bronson/vim-visual-star-search')     -- Visual mode star search
@@ -124,9 +123,12 @@ vim.fn['plug#']('majutsushi/tagbar')                  -- Code outline viewer
 
 -- Clojure
 vim.fn['plug#']('tpope/vim-fireplace', { ['for'] = 'clojure' })
+
+-- S-expression editing (available globally for structural editing)
 vim.fn['plug#']('guns/vim-sexp')
 vim.fn['plug#']('tpope/vim-sexp-mappings-for-regular-people')
-vim.fn['plug#']('vim-scripts/paredit.vim')
+
+vim.fn['plug#']('vim-scripts/paredit.vim', { ['for'] = 'clojure' })
 vim.fn['plug#']('Olical/conjure', { tag = 'v4.5.0' })
 vim.fn['plug#']('bakpakin/fennel.vim')
 

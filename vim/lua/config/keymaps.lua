@@ -70,14 +70,23 @@ map('n', 'mk', '<Plug>MoveLineUp', { silent = true })
 map('n', '<Leader>sr', ':SidewaysRight<cr>', opts)
 map('n', '<Leader>sl', ':SidewaysLeft<cr>', opts)
 
--- splitjoin plugin
-map('n', '<Leader>j', ':SplitjoinSplit<cr>', opts)
-map('n', '<Leader>k', ':SplitjoinJoin<cr>', opts)
-
 -- EasyAlign plugin
 map('v', '<Enter>', '<Plug>(EasyAlign)', { silent = true })
 map('x', 'ga', '<Plug>(EasyAlign)', { silent = true })
 map('n', 'ga', '<Plug>(EasyAlign)', { silent = true })
+
+-- vim-sexp plugin (structural editing)
+map('n', '<leader>kr', '<Plug>(sexp_raise_element)', { silent = true, desc = 'Raise: replace parent with current element' })
+map('n', '<leader>ko', '<Plug>(sexp_splice_list)', { silent = true, desc = 'Splice: remove parent, keep children' })
+map('n', '<leader>kI', '<Plug>(sexp_insert_at_list_head)', { silent = true, desc = 'Insert at start of form' })
+map('n', '<leader>kA', '<Plug>(sexp_insert_at_list_tail)', { silent = true, desc = 'Insert at end of form' })
+map('n', '<leader>kw', '<Plug>(sexp_round_head_wrap_element)', { silent = true, desc = 'Wrap in parentheses' })
+map('n', '<leader>k[', '<Plug>(sexp_square_head_wrap_element)', { silent = true, desc = 'Wrap in square brackets' })
+map('n', '<leader>k{', '<Plug>(sexp_curly_head_wrap_element)', { silent = true, desc = 'Wrap in curly braces' })
+map('n', '<leader>kj', '<Plug>(sexp_swap_element_forward)', { silent = true, desc = 'Swap element forward' })
+map('n', '<leader>kk', '<Plug>(sexp_swap_element_backward)', { silent = true, desc = 'Swap element backward' })
+map('n', '<leader>kl', '<Plug>(sexp_emit_tail_element)', { silent = true, desc = 'Slurp: move element in' })
+map('n', '<leader>kh', '<Plug>(sexp_capture_next_element)', { silent = true, desc = 'Barf: move element out' })
 
 map('n', 'ii', '>I<CR>', opts)
 
