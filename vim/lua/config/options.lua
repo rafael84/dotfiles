@@ -137,8 +137,9 @@ opt.nrformats = { 'octal', 'hex', 'alpha' } -- Support for octal, hex, and alpha
 -- ============================================================================
 
 opt.foldmethod = 'expr'                   -- Use expression for folding
-opt.foldexpr = 'nvim_treesitter#foldexpr()' -- Treesitter folding
+opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()' -- Treesitter folding
 opt.foldenable = false                    -- Don't fold by default
+opt.foldlevel = 99                        -- Start with all folds open
 
 -- ============================================================================
 -- Visuals

@@ -75,4 +75,9 @@ treesitter.setup({
       node_decremental = '<BS>',
     },
   },
+
+  -- Enable folding
+  fold = {
+    enable = true,
+  },
 })
