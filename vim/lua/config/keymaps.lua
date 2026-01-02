@@ -122,6 +122,25 @@ map('n', '<leader>fd', ':Telescope diagnostics<CR>', opts)
 map('n', 'g*', ':Rg <CR>', opts)
 map('v', 'g*', ':call RgVisual() <CR>', opts)
 
+-- Search word under cursor with Rg (after pressing *)
+map('n', '<leader>*', function()
+  local word = vim.fn.expand('<cword>')
+  vim.cmd('Rg ' .. word)
+end, opts)
+
+-- Search visual selection with Rg
+map('v', '<leader>*', function()
+  -- Yank current visual selection
+  local saved_reg = vim.fn.getreg('v')
+  vim.cmd('normal! "vy')
+  local selection = vim.fn.getreg('v')
+  vim.fn.setreg('v', saved_reg)
+
+  -- Escape special characters for ripgrep
+  selection = vim.fn.shellescape(selection)
+  vim.cmd('Rg ' .. selection)
+end, opts)
+
 -- ============================================================================
 -- Navigation - GitHub
 -- ============================================================================
