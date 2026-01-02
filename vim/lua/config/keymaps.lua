@@ -170,6 +170,17 @@ map('n', ']Q', ':clast<CR>', opts)
 map('n', '<leader>qo', ':copen<CR>', opts)
 map('n', '<leader>qc', ':cclose<CR>', opts)
 
+-- Quickfix window navigation (buffer-local to override global mappings)
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'qf',
+  callback = function()
+    local buf_opts = { buffer = true, noremap = true, silent = true }
+    vim.keymap.set('n', '<C-n>', 'j', buf_opts)  -- Just move down in the list
+    vim.keymap.set('n', '<C-p>', 'k', buf_opts)  -- Just move up in the list
+    vim.keymap.set('n', '<CR>', '<CR>', buf_opts)  -- Keep Enter to jump to file
+  end,
+})
+
 -- ============================================================================
 -- Diagnostics - Trouble
 -- ============================================================================
