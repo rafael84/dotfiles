@@ -315,6 +315,9 @@ vim.api.nvim_create_autocmd('FileType', {
       close_terminal_buffers()
       vim.cmd('split | term ' .. cmd)
 
+      -- Set filetype to 'cterm' for the terminal buffer
+      vim.bo.filetype = 'cterm'
+
       -- Auto-close terminal buffer on success
       vim.defer_fn(function()
         local term_buf = vim.api.nvim_get_current_buf()
@@ -339,6 +342,9 @@ vim.api.nvim_create_autocmd('FileType', {
     local function run_term(cmd)
       close_terminal_buffers()
       vim.cmd('split | term ' .. cmd)
+
+      -- Set filetype to 'cterm' for the terminal buffer
+      vim.bo.filetype = 'cterm'
     end
 
     vim.keymap.set('n', '<Leader>a', ':ClangdSwitchSourceHeader<CR>', buf_opts)
