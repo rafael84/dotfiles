@@ -153,24 +153,36 @@ vim.diagnostic.config({
   virtual_text = {
     prefix = '●',
     spacing = 4,
+    -- Limit the width to fit in split windows
+    -- This will truncate long messages with '...'
+    virt_text_pos = 'eol',  -- Position: end of line
+    -- Calculate max width dynamically based on window width
+    virt_text_win_col = nil,
     -- Show error code in noqa-friendly format
     format = function(diagnostic)
       local code = diagnostic.code or ''
       local source = diagnostic.source or ''
+      local message = diagnostic.message
+
+      -- Truncate long messages for better split window support
+      local max_width = math.max(40, vim.api.nvim_win_get_width(0) / 2 - 10)
+      if #message > max_width then
+        message = message:sub(1, max_width - 3) .. '...'
+      end
 
       -- For Ruff errors, show code first (for easy noqa usage)
       if source:lower():match('ruff') and code ~= '' then
-        return string.format('[%s] %s', code, diagnostic.message)
+        return string.format('[%s] %s', code, message)
       -- For other sources (pyright, etc), show source name
       elseif source ~= '' and code ~= '' then
-        return string.format('%s [%s]: %s', source, code, diagnostic.message)
+        return string.format('%s [%s]: %s', source, code, message)
       elseif code ~= '' then
-        return string.format('[%s]: %s', code, diagnostic.message)
+        return string.format('[%s]: %s', code, message)
       elseif source ~= '' then
-        return string.format('%s: %s', source, diagnostic.message)
+        return string.format('%s: %s', source, message)
       end
 
-      return diagnostic.message
+      return message
     end,
   },
   signs = {
