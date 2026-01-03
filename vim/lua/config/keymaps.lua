@@ -181,6 +181,15 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
+-- Man page navigation (buffer-local)
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'man',
+  callback = function()
+    local buf_opts = { buffer = true, noremap = true, silent = true }
+    vim.keymap.set('n', '<C-i>', '<C-]>', buf_opts)  -- Jump to tag/link under cursor
+  end,
+})
+
 -- ============================================================================
 -- Diagnostics - Trouble
 -- ============================================================================
