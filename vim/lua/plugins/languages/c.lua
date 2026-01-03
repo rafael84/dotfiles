@@ -45,13 +45,13 @@ local setup_ok, err = pcall(function()
     },
     filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
     root_dir = lspconfig.util.root_pattern(
+      '.git',
       '.clangd',
       '.clang-tidy',
       '.clang-format',
       'compile_commands.json',
       'compile_flags.txt',
-      'configure.ac',
-      '.git'
+      'configure.ac'
     ),
   })
 end)
