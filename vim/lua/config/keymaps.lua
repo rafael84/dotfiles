@@ -505,13 +505,23 @@ vim.api.nvim_create_autocmd('FileType', {
           if has_makefile then
             local binary = get_makefile_binary()
             if binary and binary ~= '' then
-              run_term('./' .. binary)
+              local args = vim.g.c_binary_args or ''
+              local cmd = './' .. binary
+              if args ~= '' then
+                cmd = cmd .. ' ' .. args
+              end
+              run_term(cmd)
             else
               vim.notify('No binary path set. Use <leader>rs to set it.', vim.log.levels.WARN)
             end
           else
             local binary = vim.fn.expand('%:r')
-            run_term('./' .. binary)
+            local args = vim.g.c_binary_args or ''
+            local cmd = './' .. binary
+            if args ~= '' then
+              cmd = cmd .. ' ' .. args
+            end
+            run_term(cmd)
           end
         end
       end, 50)

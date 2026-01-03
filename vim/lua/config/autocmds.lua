@@ -230,8 +230,10 @@ end, { desc = 'Reload project-local .nvim.lua configuration' })
 vim.api.nvim_create_user_command('ProjectConfigShow', function()
   local target = vim.g.c_make_target or '(not set)'
   local binary = vim.g.c_binary_path or '(not set)'
+  local args = vim.g.c_binary_args or '(not set)'
 
   print('=== C Build Configuration ===')
   print('Make target: ' .. target)
   print('Binary path: ' .. binary)
+  print('Binary args: ' .. args)
 end, { desc = 'Show current C build configuration' })

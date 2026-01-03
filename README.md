@@ -84,7 +84,7 @@ Leader: `,`
 | `<Leader>cF` | Generate .clang-format     |
 | `<Leader>cf` | Generate compile_flags.txt |
 
-See [Project-Local Configuration](#project-local-configuration) below for multi-target setups.
+See [Project-Local Configuration](#project-local-configuration) below for multi-target setups and runtime arguments.
 
 ## Project-Local Configuration
 
@@ -108,10 +108,12 @@ my-project/
 -- tests/.nvim.lua
 vim.g.c_make_target = 'tests'
 vim.g.c_binary_path = 'bin/app-tests'
+vim.g.c_binary_args = '--verbose'  -- Args passed to binary when running with <leader>r
 
 -- asm/.nvim.lua
 vim.g.c_make_target = 'assembler'
 vim.g.c_binary_path = 'bin/assembler'
+vim.g.c_binary_args = 'input.txt output.txt'  -- Example: pass files as args
 ```
 
 Config automatically reloads when switching between files in different directories.
