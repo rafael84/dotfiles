@@ -59,10 +59,10 @@ Leader: `,`
 
 ### Python
 
-| Key         | Action                |
-| ----------- | --------------------- |
-| `<Leader>r` | Run file (horizontal) |
-| `<Leader>R` | Run file (vertical)   |
+| Key         | Action            |
+| ----------- | ----------------- |
+| `<Leader>r` | Run file          |
+| `<Leader>R` | Run with debugger |
 
 ### Go
 
@@ -74,14 +74,52 @@ Leader: `,`
 
 ### C
 
-| Key          | Action                 |
-| ------------ | ---------------------- |
-| `<Leader>r`  | Build and run          |
-| `<Leader>R`  | Run (no rebuild)       |
-| `<Leader>b`  | Build only             |
-| `<Leader>a`  | Switch source/header   |
-| `<Leader>cF` | Generate .clang-format |
-| `<Leader>cf` | Generate compile_flags |
+| Key          | Action                     |
+| ------------ | -------------------------- |
+| `<Leader>b`  | Build (uses Makefile)      |
+| `<Leader>r`  | Build and run              |
+| `<Leader>bs` | Select make target         |
+| `<Leader>rs` | Set binary path            |
+| `<Leader>a`  | Switch source/header       |
+| `<Leader>cF` | Generate .clang-format     |
+| `<Leader>cf` | Generate compile_flags.txt |
+
+See [Project-Local Configuration](#project-local-configuration) below for multi-target setups.
+
+## Project-Local Configuration
+
+Create `.nvim.lua` in any project directory to override settings per-project or per-subdirectory.
+
+**Example: Multi-target C project**
+
+```
+my-project/
+├── .nvim.lua           # Default: tests
+├── Makefile
+├── tests/
+│   ├── .nvim.lua      # Overrides for tests
+│   └── test.c
+└── asm/
+    ├── .nvim.lua      # Overrides for assembler
+    └── assembler.c
+```
+
+```lua
+-- tests/.nvim.lua
+vim.g.c_make_target = 'tests'
+vim.g.c_binary_path = 'bin/app-tests'
+
+-- asm/.nvim.lua
+vim.g.c_make_target = 'assembler'
+vim.g.c_binary_path = 'bin/assembler'
+```
+
+Config automatically reloads when switching between files in different directories.
+
+**Commands:**
+
+- `:ProjectConfigShow` - Show current settings
+- `:ProjectConfigReload` - Manually reload config
 
 ## Edit Config
 

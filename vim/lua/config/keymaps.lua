@@ -292,17 +292,46 @@ vim.api.nvim_create_autocmd('FileType', {
       end
     end
 
+    -- Get list of Makefile targets
+    local function get_makefile_targets()
+      local makefile_name = vim.fn.filereadable('Makefile') == 1 and 'Makefile' or 'makefile'
+      if vim.fn.filereadable(makefile_name) == 0 then
+        return {}
+      end
+
+      local makefile_lines = vim.fn.readfile(makefile_name)
+      local targets = {}
+
+      for _, line in ipairs(makefile_lines) do
+        -- Match target: dependency (skip .PHONY and targets with dots/special chars)
+        local target = line:match('^([%w_-]+)%s*:')
+        if target and not vim.tbl_contains(targets, target) then
+          table.insert(targets, target)
+        end
+      end
+
+      return targets
+    end
+
     -- Find the binary target name from Makefile
     local function get_makefile_binary()
+      -- First check if project-local variable is set
+      if vim.g.c_binary_path then
+        return vim.g.c_binary_path
+      end
+
       local makefile_name = vim.fn.filereadable('Makefile') == 1 and 'Makefile' or 'makefile'
+      if vim.fn.filereadable(makefile_name) == 0 then
+        return nil
+      end
+
       local makefile_lines = vim.fn.readfile(makefile_name)
 
       for _, line in ipairs(makefile_lines) do
-        -- Match target: dependency (skip targets with dots like .PHONY)
-        local target = line:match('^([^.][^:]*):')
-        if target then
-          -- Extract binary path (e.g., "bin/tiny16" -> "bin/tiny16")
-          return target:gsub('%s+', '') -- Remove whitespace
+        -- Match output binary in -o flag (e.g., "gcc ... -o bin/tiny16")
+        local binary = line:match('%-o%s+([^%s]+)')
+        if binary then
+          return binary
         end
       end
 
@@ -350,6 +379,37 @@ vim.api.nvim_create_autocmd('FileType', {
     vim.keymap.set('n', '<leader>cF', ':CGenClangFormat<CR>', buf_opts)
     vim.keymap.set('n', '<leader>cf', ':CGenCompileFlags raylib<CR>', buf_opts)
 
+    -- Select build target (interactive)
+    vim.keymap.set('n', '<leader>bs', function()
+      local targets = get_makefile_targets()
+      if #targets == 0 then
+        vim.notify('No Makefile targets found', vim.log.levels.WARN)
+        return
+      end
+
+      vim.ui.select(targets, {
+        prompt = 'Select make target:',
+      }, function(choice)
+        if choice then
+          vim.g.c_make_target = choice
+          vim.notify('Set make target to: ' .. choice, vim.log.levels.INFO)
+        end
+      end)
+    end, buf_opts)
+
+    -- Select binary to run (interactive)
+    vim.keymap.set('n', '<leader>rs', function()
+      vim.ui.input({
+        prompt = 'Binary path: ',
+        default = vim.g.c_binary_path or 'bin/',
+      }, function(input)
+        if input and input ~= '' then
+          vim.g.c_binary_path = input
+          vim.notify('Set binary path to: ' .. input, vim.log.levels.INFO)
+        end
+      end)
+    end, buf_opts)
+
     -- Build only (uses quickfix for errors)
     vim.keymap.set('n', '<leader>b', function()
       vim.cmd('write')
@@ -357,7 +417,12 @@ vim.api.nvim_create_autocmd('FileType', {
       vim.fn.setqflist({})
 
       if vim.fn.filereadable('Makefile') == 1 then
-        vim.cmd('silent! make!')
+        local target = vim.g.c_make_target or ''
+        if target ~= '' then
+          vim.cmd('silent! make! ' .. target)
+        else
+          vim.cmd('silent! make!')
+        end
       else
         local file = vim.fn.expand('%')
         local binary = vim.fn.expand('%:r')
@@ -387,7 +452,8 @@ vim.api.nvim_create_autocmd('FileType', {
         else
           -- Build successful, close quickfix
           vim.cmd('cclose')
-          vim.notify('Build successful!', vim.log.levels.INFO)
+          local target_msg = vim.g.c_make_target and (' [' .. vim.g.c_make_target .. ']') or ''
+          vim.notify('Build successful!' .. target_msg, vim.log.levels.INFO)
         end
       end, 50)
     end, buf_opts)
@@ -401,7 +467,12 @@ vim.api.nvim_create_autocmd('FileType', {
       local has_makefile = vim.fn.filereadable('Makefile') == 1
 
       if has_makefile then
-        vim.cmd('silent! make!')
+        local target = vim.g.c_make_target or ''
+        if target ~= '' then
+          vim.cmd('silent! make! ' .. target)
+        else
+          vim.cmd('silent! make!')
+        end
       else
         local file = vim.fn.expand('%')
         local binary = vim.fn.expand('%:r')
@@ -436,7 +507,7 @@ vim.api.nvim_create_autocmd('FileType', {
             if binary and binary ~= '' then
               run_term('./' .. binary)
             else
-              vim.notify('Could not find binary target in Makefile', vim.log.levels.WARN)
+              vim.notify('No binary path set. Use <leader>rs to set it.', vim.log.levels.WARN)
             end
           else
             local binary = vim.fn.expand('%:r')
