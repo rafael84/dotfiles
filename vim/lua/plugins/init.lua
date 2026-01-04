@@ -34,6 +34,7 @@ vim.fn['plug#']('schickling/vim-bufonly')             -- Close all but current b
 vim.fn['plug#']('vim-scripts/Tabmerge')               -- Merge tabs
 vim.fn['plug#']('ConradIrwin/vim-bracketed-paste')    -- Better paste handling
 vim.fn['plug#']('dhruvasagar/vim-zoom')               -- Zoom splits
+vim.fn['plug#']('mg979/vim-visual-multi')             -- Multiple cursors
 
 -- ============================================================================
 -- Navigation and Search
