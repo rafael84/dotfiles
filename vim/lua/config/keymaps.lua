@@ -97,6 +97,16 @@ map('n', 'ii', '>I<CR>', opts)
 map('n', '<Leader>/', ':nohlsearch<CR>', opts)
 
 -- ============================================================================
+-- Replace
+-- ============================================================================
+
+-- Replace word under cursor (interactive)
+map('n', '<Leader>R', ':%s/\\<<C-r><C-w>\\>/', { noremap = true, silent = false })
+
+-- Replace visual selection (interactive)
+map('v', '<Leader>R', '"hy:%s/<C-r>h/', { noremap = true, silent = false })
+
+-- ============================================================================
 -- Navigation - NERDTree
 -- ============================================================================
 
