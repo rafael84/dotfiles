@@ -245,7 +245,10 @@
   (setq helm-M-x-fuzzy-match t
         helm-buffers-fuzzy-matching t
         helm-recentf-fuzzy-match t
-        helm-move-to-line-cycle-in-source t)
+        helm-move-to-line-cycle-in-source t
+        ;; Use ripgrep for helm grep
+        helm-grep-ag-command "rg --color=always --colors 'match:fg:red' --colors 'match:style:bold' --smart-case --no-heading --line-number %s %s %s"
+        helm-grep-ag-pipe-cmd-switches '("--colors 'match:fg:red'" "--colors 'match:style:bold'"))
 
   ;; Hide dotfiles
   (add-to-list 'helm-boring-file-regexp-list "\\`\\.")
@@ -282,6 +285,42 @@
   :after (helm projectile)
   :config
   (helm-projectile-on))
+
+(use-package deadgrep
+  :commands deadgrep
+  :config
+  (setq deadgrep-project-root-function #'projectile-project-root)
+
+  ;; Display deadgrep results at bottom
+  (add-to-list 'display-buffer-alist
+               '("\\*deadgrep"
+                 (display-buffer-at-bottom)
+                 (window-height . 0.4)))
+
+  ;; Evil-friendly keybindings in deadgrep buffer
+  (with-eval-after-load 'deadgrep
+    (evil-set-initial-state 'deadgrep-mode 'normal)
+    (evil-define-key 'normal deadgrep-mode-map
+      (kbd "n") 'deadgrep-forward
+      (kbd "N") 'deadgrep-backward
+      (kbd "p") 'deadgrep-backward
+      (kbd "RET") 'deadgrep-visit-result
+      (kbd "o") 'deadgrep-visit-result-other-window
+      (kbd "gr") 'deadgrep-restart
+      (kbd "q") 'quit-window
+      (kbd "C-n") 'deadgrep-forward
+      (kbd "C-p") 'deadgrep-backward)))
+
+;; Search wrapper using deadgrep
+(defun my/search-project ()
+  "Search in project with deadgrep."
+  (interactive)
+  (let ((search-term (read-string "Search in project: ")))
+    (when (and search-term (not (string-empty-p search-term)))
+      (deadgrep search-term (projectile-project-root))
+      ;; Focus the deadgrep window
+      (when-let ((window (get-buffer-window (concat "*deadgrep " search-term "*"))))
+        (select-window window)))))
 
 ;; Show recent projects on startup
 (defun my/show-recent-projects ()
@@ -461,6 +500,10 @@
   ;; Inspector
   (setq cider-inspector-page-size 100)
 
+  ;; Use emacs state for inspector so keys work properly
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'cider-inspector-mode 'emacs))
+
   ;; CLI options
   (setq cider-clojure-cli-global-options "-J-XX:-OmitStackTraceInFastThrow")
 
@@ -590,6 +633,18 @@
 (use-package bnf-mode
   :mode "\\.bnf\\'")
 
+(use-package json-mode
+  :mode ("\\.json\\'" "\\.json\\.base\\'")
+  :config
+  (setq js-indent-level 2))
+
+(use-package yaml-mode
+  :mode "\\.ya?ml\\'")
+
+;; EDN is just Clojure data, use clojure-mode
+(add-to-list 'auto-mode-alist '("\\.edn\\'" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.edn\\.base\\'" . clojure-mode))
+
 (use-package multiple-cursors)
 
 (use-package restart-emacs
@@ -607,8 +662,7 @@
 ;;==============================================================================
 
 (leader-key
-  "SPC" 'which-key-show-top-level
-  ":"   'helm-M-x
+  "SPC" 'helm-M-x
   "f"   '(:ignore t :which-key "files")
   "ff"  'helm-find-files
   "fr"  'helm-recentf
@@ -628,6 +682,7 @@
   "pf"  'helm-projectile-find-file
   "pp"  'helm-projectile-switch-project
   "pt"  'treemacs
+  "/"   'my/search-project
   "g"   '(:ignore t :which-key "git")
   "gs"  'magit-status
   "gl"  'git-link
@@ -666,6 +721,13 @@
   "js"  'cider-jack-in-cljs
   "ja"  'cider-jack-in-clj&cljs
   "jp"  'cider-jack-in-with-profile
+  "a"   '(:ignore t :which-key "lsp/actions")
+  "aa"  'lsp-execute-code-action
+  "ar"  'lsp-rename
+  "af"  'lsp-format-buffer
+  "ai"  'lsp-organize-imports
+  "ad"  'lsp-describe-thing-at-point
+  "aF"  'lsp-find-references
   "o"   '(:ignore t :which-key "custom")
   "ok"  'my/kill-all-buffers-and-processes
   "oT"  'cider-reload-and-rerun-failed-tests)
@@ -676,8 +738,10 @@
   "e"   '(:ignore t :which-key "eval")
   "eb"  'cider-eval-buffer
   "ee"  'cider-eval-last-sexp
+  "ev"  'cider-eval-sexp-at-point
   "ef"  'cider-eval-defun-at-point
   "er"  'cider-eval-region
+  "ei"  'cider-inspect-last-result
   "t"   '(:ignore t :which-key "test")
   "ta"  'cider-test-run-ns-tests
   "tt"  'cider-test-run-test
@@ -734,7 +798,17 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(helm-minibuffer-history-key "M-p")
- '(package-selected-packages nil))
+ '(package-selected-packages
+   '(aggressive-indent bnf-mode cider company deadgrep diff-hl
+                       evil-collection evil-commentary
+                       evil-search-highlight-persist evil-surround
+                       evil-visualstar flycheck general git-link
+                       helm-projectile helm-rg json-mode lsp-ui
+                       multiple-cursors rainbow-delimiters
+                       restart-emacs rg smartparens spacemacs-theme
+                       treemacs-evil treemacs-magit
+                       treemacs-projectile undo-fu undo-fu-session
+                       yaml-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
