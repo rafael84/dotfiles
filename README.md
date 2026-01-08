@@ -1,150 +1,160 @@
 # Dotfiles
 
-Neovim config with LSP, completion, and testing. MacOS only.
+Vim and Emacs configurations for development. MacOS only.
 
-## Quick Start
+## Installation
 
 ```bash
-cd ~/dotfiles
-make install
-nvim
+cd /path/to/dotfiles
+
+# Vim (Neovim) - Multi-language development
+make install-vim
+
+# Emacs - Clojure focused
+make install-emacs
 ```
 
-Press `<Leader>` (comma) in nvim to see keybindings.
+**What it does:**
+- Checks/installs dependencies (via Homebrew)
+- Backs up existing configs (timestamped)
+- Creates symlinks to this repo
 
 ## Structure
 
 ```
 vim/
-├── init.lua
-├── lua/config/           # Options, keymaps, autocommands
-└── lua/plugins/
-    ├── init.lua          # Plugin list
-    ├── lsp.lua
-    ├── completion.lua
-    ├── treesitter.lua
-    ├── formatting.lua
-    ├── testing.lua
-    ├── diagnostics.lua
-    ├── editing.lua
-    ├── navigation.lua
-    ├── ui.lua
-    └── languages/        # C, Go, Python, JS, Clojure
+├── init.lua              # Main config
+└── lua/
+    ├── config/           # Options, keymaps, autocmds
+    └── plugins/          # LSP, completion, languages
+
+emacs/
+├── init.el               # Main config (546 lines)
+└── early-init.el         # Performance optimizations
+
+~/.config/nvim → vim/     # Symlinks
+~/.emacs.d → emacs/
 ```
 
-## Commands
+## Vim Keys
 
-| Command        | Action         |
-| -------------- | -------------- |
-| `make install` | Full setup     |
-| `make update`  | Update all     |
-| `make clean`   | Remove plugins |
-
-## Essential Keys
-
-Leader: `,`
+Leader: `,` (press it to see all bindings)
 
 | Key          | Action               |
 | ------------ | -------------------- |
-| `<Leader>`   | Show all keys        |
 | `<C-p>`      | Find files           |
 | `<Leader>fg` | Search in files      |
 | `<F2>`       | Toggle file tree     |
 | `gd`         | Go to definition     |
 | `K`          | Documentation        |
-| `<Leader>rn` | Rename               |
 | `<Leader>fm` | Format file          |
 | `<Leader>xx` | Show diagnostics     |
-| `[d` / `]d`  | Next/prev diagnostic |
 
-### Python
+**Python:** `<Leader>r` run, `<Leader>R` debug
+**Go:** `<Leader>r` run, `<Leader>t` test
+**C:** `<Leader>b` build, `<Leader>r` build+run
 
-| Key         | Action            |
-| ----------- | ----------------- |
-| `<Leader>r` | Run file          |
-| `<Leader>R` | Run with debugger |
+## Emacs Keys
 
-### Go
+Leader: `SPC` (press it to see all bindings)
 
-| Key         | Action              |
-| ----------- | ------------------- |
-| `<Leader>r` | Run file            |
-| `<Leader>t` | Run tests           |
-| `<Leader>a` | Alternate test/impl |
+| Key       | Action                |
+| --------- | --------------------- |
+| `SPC SPC` | Command prompt        |
+| `SPC f f` | Find file             |
+| `SPC p f` | Find file in project  |
+| `SPC g s` | Git status (Magit)    |
+| `SPC p t` | Toggle file tree      |
 
-### C
+**Clojure** (`,` in .clj files):
 
-| Key          | Action                     |
-| ------------ | -------------------------- |
-| `<Leader>b`  | Build (uses Makefile)      |
-| `<Leader>r`  | Build and run              |
-| `<Leader>bs` | Select make target         |
-| `<Leader>rs` | Set binary path            |
-| `<Leader>a`  | Switch source/header       |
-| `<Leader>cF` | Generate .clang-format     |
-| `<Leader>cf` | Generate compile_flags.txt |
+| Key    | Action              |
+| ------ | ------------------- |
+| `, '`  | CIDER jack-in       |
+| `, e e`| Eval last sexp      |
+| `, e b`| Eval buffer         |
+| `, t a`| Run namespace tests |
+| `, r s`| Switch to REPL      |
 
-See [Project-Local Configuration](#project-local-configuration) below for multi-target setups and runtime arguments.
+## Commands
 
-## Project-Local Configuration
+### Vim
 
-Create `.nvim.lua` in any project directory to override settings per-project or per-subdirectory.
-
-**Example: Multi-target C project**
-
-```
-my-project/
-├── .nvim.lua           # Default: tests
-├── Makefile
-├── tests/
-│   ├── .nvim.lua      # Overrides for tests
-│   └── test.c
-└── asm/
-    ├── .nvim.lua      # Overrides for assembler
-    └── assembler.c
+```bash
+make install-vim        # Full setup
+make link-vim           # Just symlinks
+make unlink-vim         # Remove symlinks
+make update             # Update plugins
+make clean              # Remove plugins
 ```
 
-```lua
--- tests/.nvim.lua
-vim.g.c_make_target = 'tests'
-vim.g.c_binary_path = 'bin/app-tests'
-vim.g.c_binary_args = '--verbose'  -- Args passed to binary when running with <leader>r
+### Emacs
 
--- asm/.nvim.lua
-vim.g.c_make_target = 'assembler'
-vim.g.c_binary_path = 'bin/assembler'
-vim.g.c_binary_args = 'input.txt output.txt'  -- Example: pass files as args
+```bash
+make install-emacs      # Full setup
+make link-emacs         # Just symlinks
+make unlink-emacs       # Remove symlinks
+make check-deps-emacs   # Check dependencies
 ```
-
-Config automatically reloads when switching between files in different directories.
-
-**Commands:**
-
-- `:ProjectConfigShow` - Show current settings
-- `:ProjectConfigReload` - Manually reload config
-
-## Edit Config
-
-| Task     | File                           |
-| -------- | ------------------------------ |
-| Options  | `config/options.lua`           |
-| Keys     | `config/keymaps.lua`           |
-| Plugin   | `plugins/init.lua`             |
-| Language | `plugins/languages/<lang>.lua` |
-
-## Troubleshooting
-
-| Problem             | Solution                     |
-| ------------------- | ---------------------------- |
-| Plugins not loading | `make clean && make install` |
-| LSP not working     | `:Mason` then `:LspInfo`     |
-| Syntax off          | `:TSUpdate`                  |
 
 ## What's Included
 
-**LSP**: Python (pyright, ruff), Go (gopls), JS/TS (ts_ls, eslint), C (clangd), Clojure (clojure_lsp)
+### Vim
+- **LSP**: Python, Go, JS/TS, C, Clojure
+- **Tools**: Telescope, NERDTree, Treesitter, Mason, Neotest, Trouble
+- **Formatters**: conform.nvim with language-specific formatters
 
-**Tools**: Telescope, NERDTree, Treesitter, conform.nvim, Neotest, Trouble, Mason
+### Emacs
+- **Focus**: Clojure development (CIDER, clojure-lsp)
+- **Core**: Evil (vim bindings), Helm, Projectile, Magit, Company
+- **Performance**: 2-3s startup, 30 packages (vs Spacemacs: 5-10s, 200+ packages)
+
+## Customization
+
+### Vim
+
+Edit files in `vim/lua/`:
+- `config/options.lua` - Editor settings
+- `config/keymaps.lua` - Key bindings
+- `plugins/init.lua` - Plugin list
+- `plugins/languages/<lang>.lua` - Language-specific config
+
+### Emacs
+
+Edit `emacs/init.el` - everything is in one file (546 lines).
+
+For machine-specific settings, create `~/.emacs.d/custom.el` (not tracked).
+
+## Project-Local Config (Vim)
+
+Create `.nvim.lua` in any project:
+
+```lua
+-- .nvim.lua
+vim.g.c_make_target = 'tests'
+vim.g.c_binary_path = 'bin/app-tests'
+vim.g.c_binary_args = '--verbose'
+```
+
+Config auto-reloads when switching files. Commands: `:ProjectConfigShow`, `:ProjectConfigReload`
+
+## Troubleshooting
+
+| Problem                 | Solution                          |
+| ----------------------- | --------------------------------- |
+| Vim plugins not loading | `make clean && make install-vim`  |
+| Vim LSP not working     | `:Mason` then `:LspInfo`          |
+| Emacs packages failing  | `M-x package-refresh-contents`    |
+| Emacs LSP not working   | `brew install clojure-lsp/brew/clojure-lsp-native` |
+| Font not found          | Install Fira Code or edit config  |
+
+## Portability
+
+Both configs are fully portable:
+- No hardcoded paths
+- Clone anywhere, run `make install-*`
+- Symlinks adapt automatically
+- Works on any machine with dependencies installed
 
 ## License
 

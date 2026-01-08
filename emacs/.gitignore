@@ -1,0 +1,53 @@
+# Emacs configuration - only track the essential files
+
+# Backup files
+*~
+\#*\#
+.\#*
+
+# Auto-save files
+auto-save-list/
+backups/
+
+# Package directories
+elpa/
+eln-cache/
+quelpa/
+
+# Session and history files
+recentf
+transient/
+history.el
+
+# Workspace files
+workspace/
+.lsp-session-*
+
+# LSP
+.cache/
+lsp-cache/
+
+# CIDER
+.cider-repl-history
+.nrepl-port
+.nrepl-history
+
+# Project files
+.projectile
+projectile-bookmarks.eld
+projectile.cache
+
+# Other generated files
+var/
+eshell/
+network-security.data
+request/
+url/
+eclipse.jdt.ls/
+snippets/
+
+# Keep only our config files
+!init.el
+!early-init.el
+!README.md
+!.gitignore
