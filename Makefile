@@ -1,5 +1,4 @@
-.PHONY: help install update clean link unlink check-deps install-deps
-.PHONY: install-vim install-emacs link-vim link-emacs unlink-vim unlink-emacs
+.PHONY: help install-vim install-emacs link-vim link-emacs unlink-vim unlink-emacs
 .PHONY: check-deps-vim check-deps-emacs install-deps-vim install-deps-emacs
 
 NVIM_CONFIG_DIR := $(HOME)/.config/nvim
@@ -24,13 +23,6 @@ help:
 	@echo "  make unlink-emacs       - Remove emacs symlinks"
 	@echo "  make check-deps-emacs   - Check emacs dependencies"
 	@echo "  make install-deps-emacs - Install emacs dependencies"
-	@echo ""
-	@echo "Legacy Commands (vim only):"
-	@echo "  make install      - Same as install-vim"
-	@echo "  make link         - Same as link-vim"
-	@echo "  make unlink       - Same as unlink-vim"
-	@echo "  make check-deps   - Same as check-deps-vim"
-	@echo "  make install-deps - Same as install-deps-vim"
 
 check-deps-vim:
 	@echo "Checking vim dependencies..."
@@ -71,11 +63,11 @@ install-deps-vim:
 
 install-deps-emacs:
 	@echo "Installing/upgrading emacs dependencies..."
-	@brew install emacs
-	@brew install git
-	@brew install clojure-lsp/brew/clojure-lsp-native
-	@brew install leiningen
-	@brew install clojure/tools/clojure
+	@brew install emacs 2>/dev/null || brew link --overwrite --dry-run emacs >/dev/null 2>&1 || true
+	@brew install git 2>/dev/null || true
+	@brew install clojure-lsp/brew/clojure-lsp-native 2>/dev/null || true
+	@brew install leiningen 2>/dev/null || true
+	@brew install clojure/tools/clojure 2>/dev/null || true
 	@echo "✓ All emacs dependencies installed"
 
 install-deps: install-deps-vim
@@ -159,18 +151,3 @@ install-emacs: check-deps-emacs install-deps-emacs link-emacs
 	@echo "  3. Restart emacs after package installation completes"
 	@echo ""
 	@echo "Configuration location: ~/.emacs.d -> $(EMACS_DIR)"
-
-install: install-vim
-
-update:
-	@echo "Updating plugins..."
-	@nvim --headless +PlugUpdate +qall 2>/dev/null || true
-	@echo "Updating dependencies..."
-	@brew upgrade neovim ripgrep fd node shfmt stylua gofumpt clang-format 2>/dev/null || true
-	@echo "✓ Update complete"
-
-clean:
-	@echo "Removing plugins..."
-	@nvim --headless +PlugClean! +qall 2>/dev/null || true
-	@rm -rf $(HOME)/.local/share/nvim/plugged
-	@echo "✓ Plugins removed"

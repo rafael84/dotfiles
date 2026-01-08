@@ -68,7 +68,7 @@
 ;; Font configuration
 (set-face-attribute 'default nil
                     :family "Fira Code"
-                    :height 180
+                    :height 240
                     :weight 'normal)
 
 ;; Theme
@@ -76,8 +76,33 @@
   :defer t
   :init (load-theme 'spacemacs-dark t))
 
-;; Start maximized
+;; Start maximized and remember position
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; Save and restore frame position/size across sessions
+(when (fboundp 'frameset-save)
+  (defvar my-frame-geometry-file
+    (expand-file-name "frame-geometry" user-emacs-directory)
+    "File to save frame geometry.")
+
+  (defun my-save-frame-geometry ()
+    "Save frame geometry to file."
+    (with-temp-file my-frame-geometry-file
+      (prin1 (frame-parameters) (current-buffer))))
+
+  (defun my-restore-frame-geometry ()
+    "Restore frame geometry from file."
+    (when (file-exists-p my-frame-geometry-file)
+      (with-temp-buffer
+        (insert-file-contents my-frame-geometry-file)
+        (let ((params (read (current-buffer))))
+          (when (and (assq 'left params) (assq 'top params))
+            (modify-frame-parameters nil
+                                     (list (assq 'left params)
+                                           (assq 'top params))))))))
+
+  (add-hook 'kill-emacs-hook 'my-save-frame-geometry)
+  (add-hook 'after-init-hook 'my-restore-frame-geometry))
 
 ;; Better defaults
 (setq-default
@@ -85,7 +110,8 @@
  initial-scratch-message nil
  ring-bell-function 'ignore
  use-short-answers t
- confirm-kill-emacs 'yes-or-no-p)
+ confirm-kill-emacs 'yes-or-no-p
+ initial-buffer-choice nil)
 
 ;; Whitespace handling
 (setq-default
@@ -142,6 +168,16 @@
   (evil-ex-define-cmd "q" 'kill-this-buffer)
   (evil-ex-define-cmd "quit" 'evil-quit)
 
+  ;; ESC quits/aborts like C-g
+  (define-key evil-normal-state-map [escape] 'keyboard-quit)
+  (define-key evil-visual-state-map [escape] 'keyboard-quit)
+  (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
+  (global-set-key [escape] 'keyboard-escape-quit)
+
   ;; Better escape
   (setq-default evil-escape-delay 0.2
                 evil-escape-key-sequence "jk"))
@@ -167,7 +203,8 @@
 (use-package undo-fu-session
   :after undo-fu
   :config
-  (setq undo-fu-session-incompatible-files '("/tmp/" "/ssh:"))
+  (setq undo-fu-session-incompatible-files '("/tmp/" "/ssh:")
+        undo-fu-session-directory (expand-file-name "undo-fu-session" user-emacs-directory))
   (undo-fu-session-global-mode))
 
 ;;==============================================================================
@@ -178,7 +215,10 @@
   :config
   (setq which-key-idle-delay 0.2
         which-key-popup-type 'side-window
-        which-key-side-window-location 'right)
+        which-key-side-window-location 'bottom
+        which-key-side-window-max-height 0.4
+        which-key-max-description-length 32
+        which-key-add-column-padding 1)
   (which-key-mode 1))
 
 ;;==============================================================================
@@ -214,7 +254,9 @@
 
   :bind (("M-x" . helm-M-x)
          ("C-x C-f" . helm-find-files)
-         ("C-x b" . helm-mini)))
+         ("C-x b" . helm-mini)
+         :map helm-map
+         ("C-g" . helm-keyboard-quit)))
 
 ;;==============================================================================
 ;; Projectile (Project Management)
@@ -224,7 +266,10 @@
   :config
   (projectile-mode +1)
   (setq projectile-enable-caching t
-        projectile-indexing-method 'native)
+        projectile-indexing-method 'alien  ; Use external tools
+        projectile-generic-command "rg --files --color=never"
+        projectile-git-command "rg --files --color=never"
+        projectile-use-git-grep t)
 
   (add-to-list 'projectile-project-root-files "project.clj")
   (add-to-list 'projectile-project-root-files "deps.edn")
@@ -237,6 +282,23 @@
   :after (helm projectile)
   :config
   (helm-projectile-on))
+
+;; Show recent projects on startup
+(defun my/show-recent-projects ()
+  "Show recent projects on startup."
+  (interactive)
+  (if (and (fboundp 'projectile-relevant-known-projects)
+           (projectile-relevant-known-projects))
+      (helm-projectile-switch-project)
+    (when (get-buffer "*scratch*")
+      (switch-to-buffer "*scratch*"))))
+
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (when (and (not (daemonp))
+                       (< (length command-line-args) 2))
+              ;; Delay projectile to ensure frame is fully maximized
+              (run-with-timer 0.1 nil #'my/show-recent-projects))))
 
 ;;==============================================================================
 ;; Git Integration
@@ -295,9 +357,24 @@
 (use-package smartparens
   :config
   (require 'smartparens-config)
-  (setq sp-base-key-bindings 'paredit)
+  (setq sp-base-key-bindings 'paredit
+        sp-highlight-pair-overlay nil
+        sp-highlight-wrap-overlay nil
+        sp-highlight-wrap-tag-overlay nil)
   (smartparens-global-mode 1)
-  (show-smartparens-global-mode 1))
+  (show-smartparens-global-mode 1)
+
+  ;; Enable strict mode for Lisp languages
+  (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
+  (add-hook 'lisp-mode-hook #'smartparens-strict-mode)
+  (add-hook 'scheme-mode-hook #'smartparens-strict-mode)
+
+  ;; Simple Evil-friendly sexp navigation
+  (with-eval-after-load 'evil
+    (define-key evil-normal-state-map (kbd "H") 'sp-backward-sexp)
+    (define-key evil-normal-state-map (kbd "L") 'sp-forward-sexp)
+    (define-key evil-visual-state-map (kbd "H") 'sp-backward-sexp)
+    (define-key evil-visual-state-map (kbd "L") 'sp-forward-sexp)))
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -347,7 +424,7 @@
 
   ;; Indentation settings
   (setq clojure-indent-style 'align-arguments
-        clojure-align-forms-automatically t)
+        clojure-align-forms-automatically nil)
 
   ;; Custom highlighting
   (defun my-custom-clojure-highlighting ()
@@ -403,6 +480,75 @@
               (buffer-string))))))
 
 ;;==============================================================================
+;; File Management Functions
+;;==============================================================================
+
+(defun my/delete-current-file ()
+  "Delete the current file and kill the buffer."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (when filename
+      (when (y-or-n-p (format "Delete file %s? " filename))
+        (delete-file filename)
+        (kill-buffer (current-buffer))
+        (message "File '%s' deleted" filename)))))
+
+(defun my/rename-current-file ()
+  "Rename the current file and buffer."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (if (not filename)
+        (message "Buffer is not visiting a file")
+      (let ((new-name (read-file-name "New name: " filename)))
+        (cond
+         ((vc-backend filename) (vc-rename-file filename new-name))
+         (t
+          (rename-file filename new-name t)
+          (set-visited-file-name new-name t t)
+          (message "File '%s' renamed to '%s'" filename new-name)))))))
+
+(defun my/copy-file-path ()
+  "Copy the current buffer file path to the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+    (when filename
+      (kill-new filename)
+      (message "Copied: %s" filename))))
+
+(defun my/open-config ()
+  "Open the init.el configuration file."
+  (interactive)
+  (find-file (expand-file-name "init.el" user-emacs-directory)))
+
+(defun my/open-early-init ()
+  "Open the early-init.el configuration file."
+  (interactive)
+  (find-file (expand-file-name "early-init.el" user-emacs-directory)))
+
+(defun my/reload-config ()
+  "Reload the init.el configuration."
+  (interactive)
+  (load-file (expand-file-name "init.el" user-emacs-directory))
+  (message "Configuration reloaded!"))
+
+(defun my/quit-emacs ()
+  "Quit Emacs."
+  (interactive)
+  (save-some-buffers)
+  (kill-emacs))
+
+(defun my/restart-emacs ()
+  "Restart Emacs (requires restart-emacs package)."
+  (interactive)
+  (if (fboundp 'restart-emacs)
+      (progn
+        (save-some-buffers)
+        (restart-emacs))
+    (message "Install restart-emacs package for restart functionality. Use 'SPC q q' to quit manually.")))
+
+;;==============================================================================
 ;; Custom Clojure Functions
 ;;==============================================================================
 
@@ -437,12 +583,17 @@
 ;;==============================================================================
 
 (use-package aggressive-indent
-  :hook (clojure-mode . aggressive-indent-mode))
+  :commands aggressive-indent-mode)
+  ;; Disabled by default - too aggressive
+  ;; Enable manually with: M-x aggressive-indent-mode
 
 (use-package bnf-mode
   :mode "\\.bnf\\'")
 
 (use-package multiple-cursors)
+
+(use-package restart-emacs
+  :commands restart-emacs)
 
 ;; Org mode (for documentation/notes)
 (use-package org
@@ -456,11 +607,20 @@
 ;;==============================================================================
 
 (leader-key
-  "SPC" 'helm-M-x
+  "SPC" 'which-key-show-top-level
+  ":"   'helm-M-x
   "f"   '(:ignore t :which-key "files")
   "ff"  'helm-find-files
   "fr"  'helm-recentf
   "fs"  'save-buffer
+  "fS"  'save-some-buffers
+  "fD"  'my/delete-current-file
+  "fR"  'my/rename-current-file
+  "fy"  'my/copy-file-path
+  "fe"  '(:ignore t :which-key "emacs")
+  "fed" 'my/open-config
+  "feD" 'my/open-early-init
+  "feR" 'my/reload-config
   "b"   '(:ignore t :which-key "buffers")
   "bb"  'helm-mini
   "bd"  'kill-this-buffer
@@ -480,6 +640,32 @@
   "wo"  'delete-other-windows
   "ws"  'split-window-below
   "wv"  'split-window-right
+  "q"   '(:ignore t :which-key "quit")
+  "qq"  'my/quit-emacs
+  "qr"  'my/restart-emacs
+  "k"   '(:ignore t :which-key "lisp")
+  "k)"  'sp-forward-slurp-sexp
+  "k("  'sp-backward-slurp-sexp
+  "k}"  'sp-forward-barf-sexp
+  "k{"  'sp-backward-barf-sexp
+  "ks"  'sp-splice-sexp
+  "kr"  'sp-raise-sexp
+  "kS"  'sp-split-sexp
+  "kj"  'sp-join-sexp
+  "kw"  'sp-wrap-round
+  "k["  'sp-wrap-square
+  "kW"  'sp-unwrap-sexp
+  "kt"  'sp-transpose-sexp
+  "kc"  'sp-convolute-sexp
+  "ka"  'sp-absorb-sexp
+  "ke"  'sp-emit-sexp
+  "k$"  'sp-end-of-sexp
+  "j"   '(:ignore t :which-key "jack-in")
+  "jj"  'cider-jack-in
+  "jc"  'cider-jack-in-clj
+  "js"  'cider-jack-in-cljs
+  "ja"  'cider-jack-in-clj&cljs
+  "jp"  'cider-jack-in-with-profile
   "o"   '(:ignore t :which-key "custom")
   "ok"  'my/kill-all-buffers-and-processes
   "oT"  'cider-reload-and-rerun-failed-tests)
@@ -487,8 +673,6 @@
 ;; Clojure-specific key bindings
 (local-leader-key
   :keymaps 'clojure-mode-map
-  "'"   'cider-jack-in
-  "\"" 'cider-jack-in-with-profile
   "e"   '(:ignore t :which-key "eval")
   "eb"  'cider-eval-buffer
   "ee"  'cider-eval-last-sexp
@@ -510,7 +694,7 @@
   "dd"  'cider-debug-defun-at-point)
 
 ;; Global custom key binding
-(global-set-key (kbd "C-<return>") (kbd "SPC k $ RET i"))
+(global-set-key (kbd "C-<return>") (kbd "SPC k $ i RET"))
 
 ;;==============================================================================
 ;; File Associations
@@ -544,3 +728,16 @@
 
 (provide 'init)
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(helm-minibuffer-history-key "M-p")
+ '(package-selected-packages nil))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

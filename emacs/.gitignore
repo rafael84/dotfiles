@@ -18,6 +18,7 @@ quelpa/
 recentf
 transient/
 history.el
+undo-fu-session/
 
 # Workspace files
 workspace/
@@ -45,6 +46,7 @@ request/
 url/
 eclipse.jdt.ls/
 snippets/
+frame-geometry
 
 # Keep only our config files
 !init.el
