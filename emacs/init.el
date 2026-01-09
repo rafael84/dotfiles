@@ -740,6 +740,7 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "pf"  'helm-projectile-find-file
   "pp"  'helm-projectile-switch-project
   "pt"  'treemacs
+  "pq"  'projectile-kill-buffers
   "/"   'helm-projectile-ag
   "g"   '(:ignore t :which-key "git")
   "gs"  'magit-status
