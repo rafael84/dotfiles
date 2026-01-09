@@ -740,6 +740,9 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "wo"  'delete-other-windows
   "ws"  'split-window-below
   "wv"  'split-window-right
+  "wm"  'maximize-window
+  "wM"  'minimize-window
+  "w="  'balance-windows
   "q"   '(:ignore t :which-key "quit")
   "qq"  'my/quit-emacs
   "qr"  'my/restart-emacs
@@ -767,6 +770,7 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "ca"  'cider-jack-in-clj&cljs
   "cp"  'cider-jack-in-with-profile
   "cr"  'cider-switch-to-repl-buffer
+  "cc"  'cider-repl-clear-buffer
   "cq"  'cider-quit
   "ct"  'cider-test-run-test
   "cT"  'cider-test-run-ns-tests
@@ -815,7 +819,8 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "ef"  'cider-eval-defun-at-point
   "ep"  'cider-load-all-project-ns
   "er"  'cider-eval-region
-  "ei"  'cider-inspect-last-result)
+  "ei"  'cider-inspect-last-result
+  "r"   'cider-switch-to-repl-buffer)
 
 ;; Global custom key binding
 (global-set-key (kbd "C-<return>") (kbd "SPC k $ i RET"))
