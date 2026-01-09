@@ -388,7 +388,10 @@ With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point).
 ;;==============================================================================
 
 (use-package magit
-  :commands magit-status)
+  :commands magit-status
+  :config
+  ;; Display magit-status in full window
+  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 
 (use-package git-link)
 
