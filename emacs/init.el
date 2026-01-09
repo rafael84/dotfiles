@@ -287,6 +287,49 @@
   :config
   (helm-projectile-on))
 
+;; Configure helm-ag to use ripgrep when available
+(with-eval-after-load 'helm-ag
+  (setq helm-ag-base-command "rg --no-heading --color=always --smart-case"
+        helm-ag-success-exit-status '(0 2)
+        helm-ag-insert-at-point 'symbol
+        helm-ag-fuzzy-match t))
+
+(defun helm-projectile-ag (&optional options)
+  "Helm version of `projectile-ag'."
+  (interactive (if current-prefix-arg (list (helm-read-string "option: " "" 'helm-ag--extra-options-history))))
+  (if (require 'helm-ag nil t)
+      (if (projectile-project-p)
+          (let* ((grep-find-ignored-files (cl-union (projectile-ignored-files-rel) grep-find-ignored-files))
+                 (grep-find-ignored-directories (cl-union (projectile-ignored-directories-rel) grep-find-ignored-directories))
+                 (ignored (mapconcat (lambda (i)
+                                       (concat "--ignore " i))
+                                     (append grep-find-ignored-files grep-find-ignored-directories (cadr (projectile-parse-dirconfig-file)))
+                                     " "))
+                 (helm-ag-base-command (concat helm-ag-base-command " " ignored " " options))
+                 (current-prefix-arg nil))
+            (helm-do-ag (projectile-project-root) (car (projectile-parse-dirconfig-file))))
+        (error "You're not in a project"))
+    (when (yes-or-no-p "`helm-ag' is not installed. Install? ")
+      (condition-case nil
+          (progn
+            (package-vc-install '(helm-ag :url "https://github.com/emacsattic/helm-ag"))
+            (helm-projectile-ag options))
+        (error (error "`helm-ag' is not available. Can you reach GitHub?"))))))
+
+(defun spacemacs/helm-project-smart-do-search (&optional default-inputp)
+  "Search in current project with `helm-ag'.
+With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point)."
+  (interactive "P")
+  (if default-inputp
+      ;; Search with symbol at point
+      (let* ((initial-input (if (region-active-p)
+                               (buffer-substring-no-properties
+                                (region-beginning) (region-end))
+                             (thing-at-point 'symbol t))))
+        (helm-projectile-ag (when initial-input (concat "-w " initial-input))))
+    ;; Interactive search
+    (helm-projectile-ag)))
+
 (use-package deadgrep
   :commands deadgrep
   :config
@@ -684,7 +727,8 @@
   "pf"  'helm-projectile-find-file
   "pp"  'helm-projectile-switch-project
   "pt"  'treemacs
-  "/"   'my/search-project
+  "/"   'spacemacs/helm-project-smart-do-search
+  "*"   '(lambda () (interactive) (spacemacs/helm-project-smart-do-search t))
   "g"   '(:ignore t :which-key "git")
   "gs"  'magit-status
   "gl"  'git-link
@@ -801,17 +845,17 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(helm-minibuffer-history-key "M-p")
-   '(package-selected-packages
-     '(aggressive-indent bnf-mode cider company deadgrep diff-hl
-                         evil-collection evil-commentary
-                         evil-search-highlight-persist evil-surround
-                         evil-visualstar flycheck general git-link
-                         helm-projectile json-mode lsp-ui
-                         multiple-cursors rainbow-delimiters
-                         restart-emacs smartparens spacemacs-theme
-                         treemacs-evil treemacs-magit
-                         treemacs-projectile undo-fu undo-fu-session
-                         yaml-mode)))
+  '(package-selected-packages
+    '(aggressive-indent bnf-mode cider company deadgrep diff-hl
+                        evil-collection evil-commentary
+                        evil-search-highlight-persist evil-surround
+                        evil-visualstar flycheck general git-link
+                        helm-projectile json-mode lsp-ui
+                        multiple-cursors rainbow-delimiters
+                        restart-emacs smartparens spacemacs-theme
+                        treemacs-evil treemacs-magit
+                        treemacs-projectile undo-fu undo-fu-session
+                        yaml-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
