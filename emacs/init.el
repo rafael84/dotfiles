@@ -853,6 +853,85 @@ INITIAL-INPUT is the initial search term in the minibuffer."
 (setq byte-compile-warnings '(not cl-functions))
 
 ;;==============================================================================
+;; Clean Mode-line Configuration
+;;==============================================================================
+
+;; Disable cluttering mode-line elements
+(setq mode-line-percent-position nil)  ; Remove percentage position
+
+;; Custom mode-line format - minimal and clean
+(setq-default mode-line-format
+      '((:eval
+         (let* ((evil-state
+                 (if (bound-and-true-p evil-mode)
+                     (let ((state (cond
+                                   ((evil-normal-state-p) "N")
+                                   ((evil-insert-state-p) "I")
+                                   ((evil-visual-state-p) "V")
+                                   ((evil-replace-state-p) "R")
+                                   ((evil-operator-state-p) "O")
+                                   ((evil-motion-state-p) "M")
+                                   ((evil-emacs-state-p) "E")
+                                   (t "-"))))
+                       (propertize (format " %s " state) 'face
+                                   (cond
+                                    ((evil-normal-state-p) '(:background "#268bd2" :foreground "#002b36" :weight bold))
+                                    ((evil-insert-state-p) '(:background "#859900" :foreground "#002b36" :weight bold))
+                                    ((evil-visual-state-p) '(:background "#cb4b16" :foreground "#002b36" :weight bold))
+                                    ((evil-replace-state-p) '(:background "#dc322f" :foreground "#002b36" :weight bold))
+                                    (t '(:background "#586e75" :foreground "#002b36" :weight bold)))))
+                   ""))
+                (buffer-name-str
+                 (propertize " %b " 'face '(:weight bold)))
+                (modified-str
+                 (if (buffer-modified-p)
+                     (propertize " [+] " 'face '(:foreground "#cb4b16"))
+                   ""))
+                (readonly-str
+                 (if buffer-read-only
+                     (propertize " [RO] " 'face '(:foreground "#dc322f"))
+                   ""))
+                (project-str
+                 (when (and (bound-and-true-p projectile-mode)
+                            (projectile-project-p))
+                   (propertize (format " [%s] " (projectile-project-name))
+                               'face '(:foreground "#859900"))))
+                (position-str
+                 (propertize " %l:%c " 'face '(:foreground "#586e75")))
+                (major-mode-str
+                 (propertize (format " %s " mode-name)
+                             'face '(:foreground "#268bd2")))
+                (vc-str
+                 (when vc-mode
+                   (let ((branch (replace-regexp-in-string "^ Git[:-]" "" vc-mode)))
+                     (propertize (format " %s " branch)
+                                 'face '(:foreground "#6c71c4")))))
+                (lsp-str
+                 (when (bound-and-true-p lsp-mode)
+                   (propertize " LSP " 'face '(:foreground "#2aa198" :weight bold))))
+                (cider-str
+                 (when (and (bound-and-true-p cider-mode)
+                            (cider-connected-p))
+                   (propertize " CIDER " 'face '(:foreground "#b58900" :weight bold)))))
+           (concat
+            evil-state
+            buffer-name-str
+            modified-str
+            readonly-str
+            project-str
+            major-mode-str
+            lsp-str
+            cider-str
+            vc-str
+            position-str)))))
+
+;; Disable minor mode display in mode-line
+(setq mode-line-modes
+      (let ((recursive-edit-help-echo "Recursive edit, type C-M-c to get out"))
+        (list (propertize "%[" 'help-echo recursive-edit-help-echo)
+              (propertize "%]" 'help-echo recursive-edit-help-echo))))
+
+;;==============================================================================
 ;; End of Configuration
 ;;==============================================================================
 
