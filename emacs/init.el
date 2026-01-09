@@ -113,6 +113,11 @@
  confirm-kill-emacs 'yes-or-no-p
  initial-buffer-choice nil)
 
+;; Smooth scrolling - don't recenter cursor
+(setq scroll-conservatively 101
+      scroll-margin 0
+      scroll-preserve-screen-position t)
+
 ;; Whitespace handling
 (setq-default
  indent-tabs-mode nil
