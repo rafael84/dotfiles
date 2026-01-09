@@ -173,9 +173,16 @@
   (evil-ex-define-cmd "q" (lambda () (interactive) (kill-buffer (current-buffer))))
   (evil-ex-define-cmd "quit" 'evil-quit)
 
-  ;; ESC quits/aborts like C-g
-  (define-key evil-normal-state-map [escape] 'keyboard-quit)
-  (define-key evil-visual-state-map [escape] 'keyboard-quit)
+  ;; ESC quits/aborts like C-g (also exits evil-mc if active)
+  (defun my/evil-escape ()
+    "Exit evil-mc if active, otherwise run keyboard-quit."
+    (interactive)
+    (if (and (bound-and-true-p evil-mc-mode) (evil-mc-has-cursors-p))
+        (evil-mc-undo-all-cursors)
+      (keyboard-quit)))
+
+  (define-key evil-normal-state-map [escape] 'my/evil-escape)
+  (define-key evil-visual-state-map [escape] 'my/evil-escape)
   (define-key minibuffer-local-map [escape] 'abort-recursive-edit)
   (define-key minibuffer-local-ns-map [escape] 'abort-recursive-edit)
   (define-key minibuffer-local-completion-map [escape] 'abort-recursive-edit)
@@ -312,45 +319,16 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   (if (projectile-project-p)
       (let* ((grep-find-ignored-files (cl-union (projectile-ignored-files-rel) grep-find-ignored-files))
              (grep-find-ignored-directories (cl-union (projectile-ignored-directories-rel) grep-find-ignored-directories))
+             ;; Use --glob '!pattern' for ripgrep instead of --ignore
              (ignored (mapconcat (lambda (i)
-                                   (concat "--ignore " i))
-                                 (append grep-find-ignored-files grep-find-ignored-directories (cadr (projectile-parse-dirconfig-file)))
+                                   (format "--glob '!%s'" i))
+                                 (append grep-find-ignored-files
+                                         (mapcar (lambda (d) (concat d "/**")) grep-find-ignored-directories))
                                  " "))
              (helm-ag-base-command (concat helm-ag-base-command " " ignored))
              (current-prefix-arg nil))
         (helm-do-ag (projectile-project-root) nil initial-input))
     (error "You're not in a project")))
-
-(use-package deadgrep
-  :commands deadgrep
-  :config
-  (setq deadgrep-project-root-function #'projectile-project-root)
-
-  ;; Display deadgrep results at bottom
-  (add-to-list 'display-buffer-alist
-               '("\\*deadgrep"
-                 (display-buffer-at-bottom)
-                 (window-height . 0.4)))
-
-  ;; Evil-friendly keybindings in deadgrep buffer (match xref style)
-  (with-eval-after-load 'deadgrep
-    (evil-set-initial-state 'deadgrep-mode 'emacs)
-    (define-key deadgrep-mode-map (kbd "n") 'deadgrep-forward)
-    (define-key deadgrep-mode-map (kbd "p") 'deadgrep-backward)
-    (define-key deadgrep-mode-map (kbd "RET") 'deadgrep-visit-result)
-    (define-key deadgrep-mode-map (kbd "q") 'quit-window)
-    (define-key deadgrep-mode-map (kbd "g") 'deadgrep-restart)))
-
-;; Search wrapper using deadgrep
-(defun my/search-project ()
-  "Search in project with deadgrep."
-  (interactive)
-  (let ((search-term (read-string "Search in project: ")))
-    (when (and search-term (not (string-empty-p search-term)))
-      (deadgrep search-term (projectile-project-root))
-      ;; Focus the deadgrep window
-      (when-let ((window (get-buffer-window (concat "*deadgrep " search-term "*"))))
-        (select-window window)))))
 
 ;; Show recent projects on startup
 (defun my/show-recent-projects ()
@@ -696,7 +674,15 @@ INITIAL-INPUT is the initial search term in the minibuffer."
 (add-to-list 'auto-mode-alist '("\\.edn\\'" . clojure-mode))
 (add-to-list 'auto-mode-alist '("\\.edn\\.base\\'" . clojure-mode))
 
-(use-package multiple-cursors)
+(use-package evil-mc
+  :after evil
+  :config
+  (global-evil-mc-mode 1)
+
+  ;; evil-mc keybindings in normal state
+  (with-eval-after-load 'evil
+    (define-key evil-normal-state-map (kbd "g z j") 'evil-mc-make-cursor-move-next-line)
+    (define-key evil-normal-state-map (kbd "g z k") 'evil-mc-make-cursor-move-prev-line)))
 
 (use-package restart-emacs
   :commands restart-emacs)
@@ -799,7 +785,17 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "lwb" 'lsp-workspace-blacklist-remove
   "o"   '(:ignore t :which-key "custom")
   "ok"  'my/kill-all-buffers-and-processes
-  "oT"  'cider-reload-and-rerun-failed-tests)
+  "oT"  'cider-reload-and-rerun-failed-tests
+  "m"   '(:ignore t :which-key "evil-mc")
+  "mn"  'evil-mc-make-and-goto-next-match
+  "mp"  'evil-mc-make-and-goto-prev-match
+  "mN"  'evil-mc-skip-and-goto-next-match
+  "mP"  'evil-mc-skip-and-goto-prev-match
+  "ma"  'evil-mc-make-all-cursors
+  "mu"  'evil-mc-undo-all-cursors
+  "ms"  'evil-mc-pause-cursors
+  "mr"  'evil-mc-resume-cursors
+  "mq"  'evil-mc-undo-last-added-cursor)
 
 ;; Clojure-specific key bindings
 (local-leader-key
@@ -868,17 +864,16 @@ INITIAL-INPUT is the initial search term in the minibuffer."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(helm-minibuffer-history-key "M-p")
-  '(package-selected-packages
-    '(aggressive-indent bnf-mode cider company deadgrep diff-hl
-                        evil-collection evil-commentary
-                        evil-search-highlight-persist evil-surround
-                        evil-visualstar flycheck general git-link
-                        helm-projectile json-mode lsp-ui
-                        multiple-cursors rainbow-delimiters
-                        restart-emacs smartparens spacemacs-theme
-                        treemacs-evil treemacs-magit
-                        treemacs-projectile undo-fu undo-fu-session
-                        yaml-mode)))
+ '(package-selected-packages
+   '(aggressive-indent bnf-mode cider company diff-hl
+                       evil-collection evil-commentary evil-mc
+                       evil-search-highlight-persist evil-surround
+                       evil-visualstar flycheck general git-link
+                       helm-projectile json-mode lsp-ui
+                       rainbow-delimiters restart-emacs smartparens
+                       spacemacs-theme treemacs-evil treemacs-magit
+                       treemacs-projectile undo-fu undo-fu-session
+                       yaml-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
