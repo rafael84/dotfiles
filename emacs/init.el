@@ -708,6 +708,7 @@ With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point).
 
 (leader-key
   "SPC" 'helm-M-x
+  "TAB" 'evil-switch-to-windows-last-buffer
   "f"   '(:ignore t :which-key "files")
   "ff"  'helm-find-files
   "fr"  'helm-recentf
