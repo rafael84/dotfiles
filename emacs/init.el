@@ -165,7 +165,7 @@
   (define-key evil-motion-state-map (kbd ";") 'evil-ex)
 
   ;; Custom ex commands
-  (evil-ex-define-cmd "q" 'kill-this-buffer)
+  (evil-ex-define-cmd "q" (lambda () (interactive) (kill-buffer (current-buffer))))
   (evil-ex-define-cmd "quit" 'evil-quit)
 
   ;; ESC quits/aborts like C-g
@@ -722,7 +722,13 @@ With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point).
   "feR" 'my/reload-config
   "b"   '(:ignore t :which-key "buffers")
   "bb"  'helm-mini
-  "bd"  'kill-this-buffer
+  "bd"  (lambda () (interactive) (kill-buffer (current-buffer)))
+  "bn"  'evil-next-buffer
+  "bp"  'evil-prev-buffer
+  "bD"  'kill-buffer-and-window
+  "br"  'revert-buffer
+  "bs"  'save-buffer
+  "bS"  'save-some-buffers
   "p"   '(:ignore t :which-key "project")
   "pf"  'helm-projectile-find-file
   "pp"  'helm-projectile-switch-project
@@ -767,13 +773,24 @@ With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point).
   "js"  'cider-jack-in-cljs
   "ja"  'cider-jack-in-clj&cljs
   "jp"  'cider-jack-in-with-profile
-  "a"   '(:ignore t :which-key "lsp/actions")
-  "aa"  'lsp-execute-code-action
-  "ar"  'lsp-rename
-  "af"  'lsp-format-buffer
-  "ai"  'lsp-organize-imports
-  "ad"  'lsp-describe-thing-at-point
-  "aF"  'lsp-find-references
+  "l"   '(:ignore t :which-key "lsp")
+  "la"  'lsp-execute-code-action
+  "lr"  'lsp-rename
+  "lf"  'lsp-format-buffer
+  "li"  'lsp-organize-imports
+  "ld"  'lsp-describe-thing-at-point
+  "lF"  'lsp-find-references
+  "ls"  '(:ignore t :which-key "server")
+  "lss" 'lsp
+  "lsq" 'lsp-workspace-shutdown
+  "lsr" 'lsp-workspace-restart
+  "lsc" 'lsp-disconnect
+  "lsR" 'lsp-reconnect
+  "lsd" 'lsp-describe-session
+  "lw"  '(:ignore t :which-key "workspace")
+  "lwa" 'lsp-workspace-folders-add
+  "lwr" 'lsp-workspace-folders-remove
+  "lwb" 'lsp-workspace-blacklist-remove
   "o"   '(:ignore t :which-key "custom")
   "ok"  'my/kill-all-buffers-and-processes
   "oT"  'cider-reload-and-rerun-failed-tests)
