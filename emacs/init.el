@@ -171,11 +171,11 @@
   ;; ESC quits/aborts like C-g
   (define-key evil-normal-state-map [escape] 'keyboard-quit)
   (define-key evil-visual-state-map [escape] 'keyboard-quit)
-  (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
-  (define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
-  (define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
-  (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
-  (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-map [escape] 'abort-recursive-edit)
+  (define-key minibuffer-local-ns-map [escape] 'abort-recursive-edit)
+  (define-key minibuffer-local-completion-map [escape] 'abort-recursive-edit)
+  (define-key minibuffer-local-must-match-map [escape] 'abort-recursive-edit)
+  (define-key minibuffer-local-isearch-map [escape] 'abort-recursive-edit)
   (global-set-key [escape] 'keyboard-escape-quit)
 
   ;; Better escape
@@ -259,6 +259,7 @@
          ("C-x C-f" . helm-find-files)
          ("C-x b" . helm-mini)
          :map helm-map
+         ("<escape>" . helm-keyboard-quit)
          ("C-g" . helm-keyboard-quit)))
 
 ;;==============================================================================
@@ -297,19 +298,14 @@
                  (display-buffer-at-bottom)
                  (window-height . 0.4)))
 
-  ;; Evil-friendly keybindings in deadgrep buffer
+  ;; Evil-friendly keybindings in deadgrep buffer (match xref style)
   (with-eval-after-load 'deadgrep
-    (evil-set-initial-state 'deadgrep-mode 'normal)
-    (evil-define-key 'normal deadgrep-mode-map
-      (kbd "n") 'deadgrep-forward
-      (kbd "N") 'deadgrep-backward
-      (kbd "p") 'deadgrep-backward
-      (kbd "RET") 'deadgrep-visit-result
-      (kbd "o") 'deadgrep-visit-result-other-window
-      (kbd "gr") 'deadgrep-restart
-      (kbd "q") 'quit-window
-      (kbd "C-n") 'deadgrep-forward
-      (kbd "C-p") 'deadgrep-backward)))
+    (evil-set-initial-state 'deadgrep-mode 'emacs)
+    (define-key deadgrep-mode-map (kbd "n") 'deadgrep-forward)
+    (define-key deadgrep-mode-map (kbd "p") 'deadgrep-backward)
+    (define-key deadgrep-mode-map (kbd "RET") 'deadgrep-visit-result)
+    (define-key deadgrep-mode-map (kbd "q") 'quit-window)
+    (define-key deadgrep-mode-map (kbd "g") 'deadgrep-restart)))
 
 ;; Search wrapper using deadgrep
 (defun my/search-project ()
@@ -442,6 +438,12 @@
   :commands lsp-ui-mode
   :config
   (setq lsp-ui-doc-show-with-cursor nil))
+
+;; Display xref (find references) results at bottom
+(add-to-list 'display-buffer-alist
+             '("\\*xref\\*"
+               (display-buffer-at-bottom)
+               (window-height . 0.4)))
 
 ;;==============================================================================
 ;; Clojure Configuration
@@ -740,6 +742,7 @@
   "ee"  'cider-eval-last-sexp
   "ev"  'cider-eval-sexp-at-point
   "ef"  'cider-eval-defun-at-point
+  "ep"  'cider-load-all-project-ns
   "er"  'cider-eval-region
   "ei"  'cider-inspect-last-result
   "t"   '(:ignore t :which-key "test")
@@ -798,17 +801,17 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(helm-minibuffer-history-key "M-p")
- '(package-selected-packages
-   '(aggressive-indent bnf-mode cider company deadgrep diff-hl
-                       evil-collection evil-commentary
-                       evil-search-highlight-persist evil-surround
-                       evil-visualstar flycheck general git-link
-                       helm-projectile helm-rg json-mode lsp-ui
-                       multiple-cursors rainbow-delimiters
-                       restart-emacs rg smartparens spacemacs-theme
-                       treemacs-evil treemacs-magit
-                       treemacs-projectile undo-fu undo-fu-session
-                       yaml-mode)))
+   '(package-selected-packages
+     '(aggressive-indent bnf-mode cider company deadgrep diff-hl
+                         evil-collection evil-commentary
+                         evil-search-highlight-persist evil-surround
+                         evil-visualstar flycheck general git-link
+                         helm-projectile json-mode lsp-ui
+                         multiple-cursors rainbow-delimiters
+                         restart-emacs smartparens spacemacs-theme
+                         treemacs-evil treemacs-magit
+                         treemacs-projectile undo-fu undo-fu-session
+                         yaml-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

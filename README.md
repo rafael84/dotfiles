@@ -120,6 +120,7 @@ Leader: `SPC` (wait 0.2s to see all bindings)
 | `, e i` | Inspect last result     |
 | `, e f` | Eval top-level defun    |
 | `, e b` | Eval buffer             |
+| `, e p` | Eval project (all ns)   |
 | `, e r` | Eval region             |
 | `, t a` | Run namespace tests     |
 | `, n r` | Refresh namespace       |
