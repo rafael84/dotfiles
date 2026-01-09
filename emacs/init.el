@@ -292,6 +292,11 @@
   :config
   (helm-projectile-on))
 
+;; helm-ag is not in MELPA anymore, install from GitHub if needed
+(unless (package-installed-p 'helm-ag)
+  (message "Installing helm-ag from GitHub...")
+  (package-vc-install '(helm-ag :url "https://github.com/emacsattic/helm-ag")))
+
 ;; Configure helm-ag to use ripgrep when available
 (with-eval-after-load 'helm-ag
   (setq helm-ag-base-command "rg --no-heading --color=always --smart-case"
@@ -299,41 +304,22 @@
         helm-ag-insert-at-point 'symbol
         helm-ag-fuzzy-match t))
 
-(defun helm-projectile-ag (&optional options)
-  "Helm version of `projectile-ag'."
-  (interactive (if current-prefix-arg (list (helm-read-string "option: " "" 'helm-ag--extra-options-history))))
-  (if (require 'helm-ag nil t)
-      (if (projectile-project-p)
-          (let* ((grep-find-ignored-files (cl-union (projectile-ignored-files-rel) grep-find-ignored-files))
-                 (grep-find-ignored-directories (cl-union (projectile-ignored-directories-rel) grep-find-ignored-directories))
-                 (ignored (mapconcat (lambda (i)
-                                       (concat "--ignore " i))
-                                     (append grep-find-ignored-files grep-find-ignored-directories (cadr (projectile-parse-dirconfig-file)))
-                                     " "))
-                 (helm-ag-base-command (concat helm-ag-base-command " " ignored " " options))
-                 (current-prefix-arg nil))
-            (helm-do-ag (projectile-project-root) (car (projectile-parse-dirconfig-file))))
-        (error "You're not in a project"))
-    (when (yes-or-no-p "`helm-ag' is not installed. Install? ")
-      (condition-case nil
-          (progn
-            (package-vc-install '(helm-ag :url "https://github.com/emacsattic/helm-ag"))
-            (helm-projectile-ag options))
-        (error (error "`helm-ag' is not available. Can you reach GitHub?"))))))
-
-(defun spacemacs/helm-project-smart-do-search (&optional default-inputp)
-  "Search in current project with `helm-ag'.
-With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point)."
-  (interactive "P")
-  (if default-inputp
-      ;; Search with symbol at point
-      (let* ((initial-input (if (region-active-p)
-                               (buffer-substring-no-properties
-                                (region-beginning) (region-end))
-                             (thing-at-point 'symbol t))))
-        (helm-projectile-ag (when initial-input (concat "-w " initial-input))))
-    ;; Interactive search
-    (helm-projectile-ag)))
+(defun helm-projectile-ag (&optional initial-input)
+  "Helm version of `projectile-ag'.
+INITIAL-INPUT is the initial search term in the minibuffer."
+  (interactive)
+  (require 'helm-ag)
+  (if (projectile-project-p)
+      (let* ((grep-find-ignored-files (cl-union (projectile-ignored-files-rel) grep-find-ignored-files))
+             (grep-find-ignored-directories (cl-union (projectile-ignored-directories-rel) grep-find-ignored-directories))
+             (ignored (mapconcat (lambda (i)
+                                   (concat "--ignore " i))
+                                 (append grep-find-ignored-files grep-find-ignored-directories (cadr (projectile-parse-dirconfig-file)))
+                                 " "))
+             (helm-ag-base-command (concat helm-ag-base-command " " ignored))
+             (current-prefix-arg nil))
+        (helm-do-ag (projectile-project-root) nil initial-input))
+    (error "You're not in a project")))
 
 (use-package deadgrep
   :commands deadgrep
@@ -754,8 +740,7 @@ With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point).
   "pf"  'helm-projectile-find-file
   "pp"  'helm-projectile-switch-project
   "pt"  'treemacs
-  "/"   'spacemacs/helm-project-smart-do-search
-  "*"   '(lambda () (interactive) (spacemacs/helm-project-smart-do-search t))
+  "/"   'helm-projectile-ag
   "g"   '(:ignore t :which-key "git")
   "gs"  'magit-status
   "gl"  'git-link
