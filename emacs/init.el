@@ -496,7 +496,30 @@ INITIAL-INPUT is the initial search term in the minibuffer."
 
   (add-hook 'clojure-mode-hook 'my-custom-clojure-highlighting)
   (add-hook 'clojure-mode-hook #'smartparens-strict-mode)
-  (add-hook 'clojure-mode-hook #'lsp-deferred))
+  (add-hook 'clojure-mode-hook #'lsp-deferred)
+
+  ;; Enable code folding
+  (add-hook 'clojure-mode-hook #'hs-minor-mode)
+
+  ;; Configure hideshow for better code folding
+  (with-eval-after-load 'hideshow
+    (defun my/hs-toggle ()
+      "Toggle hideshow block at point."
+      (interactive)
+      (save-excursion
+        (end-of-line)
+        (if (hs-already-hidden-p)
+            (hs-show-block)
+          (hs-hide-block))))
+
+    ;; Add Evil-style folding keybindings for Clojure mode
+    (with-eval-after-load 'evil
+      (evil-define-key 'normal clojure-mode-map
+        "za" 'my/hs-toggle
+        "zc" 'hs-hide-block
+        "zo" 'hs-show-block
+        "zM" 'hs-hide-all
+        "zR" 'hs-show-all))))
 
 (use-package cider
   :after clojure-mode
@@ -820,7 +843,14 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "ep"  'cider-load-all-project-ns
   "er"  'cider-eval-region
   "ei"  'cider-inspect-last-result
-  "r"   'cider-switch-to-repl-buffer)
+  "r"   'cider-switch-to-repl-buffer
+  "z"   '(:ignore t :which-key "fold")
+  "zt"  'my/hs-toggle
+  "za"  'hs-hide-all
+  "zs"  'hs-show-all
+  "zh"  'hs-hide-block
+  "zS"  'hs-show-block
+  "zl"  'hs-hide-level)
 
 ;; Global custom key binding
 (global-set-key (kbd "C-<return>") (kbd "SPC k $ i RET"))
