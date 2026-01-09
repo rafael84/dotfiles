@@ -760,12 +760,21 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "ka"  'sp-absorb-sexp
   "ke"  'sp-emit-sexp
   "k$"  'sp-end-of-sexp
-  "j"   '(:ignore t :which-key "jack-in")
-  "jj"  'cider-jack-in
-  "jc"  'cider-jack-in-clj
-  "js"  'cider-jack-in-cljs
-  "ja"  'cider-jack-in-clj&cljs
-  "jp"  'cider-jack-in-with-profile
+  "c"   '(:ignore t :which-key "cider")
+  "cj"  'cider-jack-in
+  "cJ"  'cider-jack-in-clj
+  "cs"  'cider-jack-in-cljs
+  "ca"  'cider-jack-in-clj&cljs
+  "cp"  'cider-jack-in-with-profile
+  "cr"  'cider-switch-to-repl-buffer
+  "cq"  'cider-quit
+  "ct"  'cider-test-run-test
+  "cT"  'cider-test-run-ns-tests
+  "cP"  'cider-test-run-project-tests
+  "cR"  'cider-test-rerun-failed-tests
+  "cn"  'cider-ns-refresh
+  "cf"  'my/clojure-format-buffer
+  "cd"  'cider-debug-defun-at-point
   "l"   '(:ignore t :which-key "lsp")
   "la"  'lsp-execute-code-action
   "lr"  'lsp-rename
@@ -785,7 +794,6 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "lwb" 'lsp-workspace-blacklist-remove
   "o"   '(:ignore t :which-key "custom")
   "ok"  'my/kill-all-buffers-and-processes
-  "oT"  'cider-reload-and-rerun-failed-tests
   "m"   '(:ignore t :which-key "evil-mc")
   "mn"  'evil-mc-make-and-goto-next-match
   "mp"  'evil-mc-make-and-goto-prev-match
@@ -797,7 +805,7 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "mr"  'evil-mc-resume-cursors
   "mq"  'evil-mc-undo-last-added-cursor)
 
-;; Clojure-specific key bindings
+;; Clojure-specific key bindings (local leader - mainly for eval)
 (local-leader-key
   :keymaps 'clojure-mode-map
   "e"   '(:ignore t :which-key "eval")
@@ -807,21 +815,7 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "ef"  'cider-eval-defun-at-point
   "ep"  'cider-load-all-project-ns
   "er"  'cider-eval-region
-  "ei"  'cider-inspect-last-result
-  "t"   '(:ignore t :which-key "test")
-  "ta"  'cider-test-run-ns-tests
-  "tt"  'cider-test-run-test
-  "tp"  'cider-test-run-project-tests
-  "tr"  'cider-test-rerun-failed-tests
-  "n"   '(:ignore t :which-key "namespace")
-  "nr"  'cider-ns-refresh
-  "r"   '(:ignore t :which-key "repl")
-  "rs"  'cider-switch-to-repl-buffer
-  "rq"  'cider-quit
-  "f"   '(:ignore t :which-key "format")
-  "ff"  'my/clojure-format-buffer
-  "d"   '(:ignore t :which-key "debug")
-  "dd"  'cider-debug-defun-at-point)
+  "ei"  'cider-inspect-last-result)
 
 ;; Global custom key binding
 (global-set-key (kbd "C-<return>") (kbd "SPC k $ i RET"))
