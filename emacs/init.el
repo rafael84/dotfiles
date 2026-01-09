@@ -480,7 +480,12 @@ With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point).
         lsp-ui-sideline-enable nil
         lsp-modeline-code-actions-enable nil
         lsp-diagnostics-provider :none
-        lsp-modeline-diagnostics-enable nil))
+        lsp-modeline-diagnostics-enable nil
+        ;; Enable formatting
+        lsp-enable-on-type-formatting nil
+        lsp-enable-indentation t
+        lsp-enable-snippet nil
+        lsp-before-save-edits nil))
 
 (use-package lsp-ui
   :commands lsp-ui-mode
@@ -671,6 +676,13 @@ With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point).
   (delete-window)
   (cider-test-rerun-failed-tests))
 
+(defun my/clojure-format-buffer ()
+  "Format Clojure buffer using LSP (clojure-lsp with cljfmt)."
+  (interactive)
+  (if (bound-and-true-p lsp-mode)
+      (lsp-format-buffer)
+    (message "LSP not active. Start LSP with SPC l s s")))
+
 ;;==============================================================================
 ;; Additional Useful Packages
 ;;==============================================================================
@@ -823,7 +835,7 @@ With prefix arg DEFAULT-INPUTP, search with the default input (symbol at point).
   "rs"  'cider-switch-to-repl-buffer
   "rq"  'cider-quit
   "f"   '(:ignore t :which-key "format")
-  "ff"  'cider-format-buffer
+  "ff"  'my/clojure-format-buffer
   "d"   '(:ignore t :which-key "debug")
   "dd"  'cider-debug-defun-at-point)
 
