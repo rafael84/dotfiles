@@ -783,10 +783,9 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "l"   '(:ignore t :which-key "lsp")
   "la"  'lsp-execute-code-action
   "lr"  'lsp-rename
-  "lf"  'lsp-format-buffer
+  "lf"  'lsp-find-references
   "li"  'lsp-organize-imports
   "ld"  'lsp-describe-thing-at-point
-  "lF"  'lsp-find-references
   "ls"  '(:ignore t :which-key "server")
   "lss" 'lsp
   "lsq" 'lsp-workspace-shutdown
