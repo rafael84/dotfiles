@@ -795,13 +795,14 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   "cr"  'cider-switch-to-repl-buffer
   "cc"  'cider-repl-clear-buffer
   "cq"  'cider-quit
-  "ct"  'cider-test-run-test
-  "cT"  'cider-test-run-ns-tests
-  "cP"  'cider-test-run-project-tests
-  "cR"  'cider-test-rerun-failed-tests
   "cn"  'cider-ns-refresh
   "cf"  'my/clojure-format-buffer
   "cd"  'cider-debug-defun-at-point
+  "t"   '(:ignore t :which-key "test")
+  "tt"  'cider-test-run-test
+  "tn"  'cider-test-run-ns-tests
+  "tp"  'cider-test-run-project-tests
+  "tr"  'cider-test-rerun-failed-tests
   "l"   '(:ignore t :which-key "lsp")
   "la"  'lsp-execute-code-action
   "lr"  'lsp-rename

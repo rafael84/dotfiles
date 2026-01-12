@@ -3,13 +3,10 @@
 *.swo
 *~
 .netrwhist
-
-# Backups
 *.backup
-
-# OS
 .DS_Store
 Thumbs.db
-
-# Don't track the actual vimrc that was being used
 .vimrc
+.lsp
+.clj-kondo
+emacs/tramp
