@@ -364,6 +364,15 @@ INITIAL-INPUT is the initial search term in the minibuffer."
   (global-diff-hl-mode))
 
 ;;==============================================================================
+;; Window Numbering
+;;==============================================================================
+
+(use-package winum
+  :config
+  (setq winum-auto-setup-mode-line nil)  ; We'll add it to our custom mode-line
+  (winum-mode))
+
+;;==============================================================================
 ;; Treemacs (File Tree)
 ;;==============================================================================
 
@@ -724,6 +733,15 @@ INITIAL-INPUT is the initial search term in the minibuffer."
 (leader-key
   "SPC" 'helm-M-x
   "TAB" 'evil-switch-to-windows-last-buffer
+  "1"   'winum-select-window-1
+  "2"   'winum-select-window-2
+  "3"   'winum-select-window-3
+  "4"   'winum-select-window-4
+  "5"   'winum-select-window-5
+  "6"   'winum-select-window-6
+  "7"   'winum-select-window-7
+  "8"   'winum-select-window-8
+  "9"   'winum-select-window-9
   "f"   '(:ignore t :which-key "files")
   "ff"  'helm-find-files
   "fr"  'helm-recentf
@@ -911,6 +929,11 @@ INITIAL-INPUT is the initial search term in the minibuffer."
                                     ((evil-replace-state-p) '(:background "#dc322f" :foreground "#002b36" :weight bold))
                                     (t '(:background "#586e75" :foreground "#002b36" :weight bold)))))
                    ""))
+                (window-number-str
+                 (if (bound-and-true-p winum-mode)
+                     (propertize (format " %d " (winum-get-number))
+                                 'face '(:background "#6c71c4" :foreground "#002b36" :weight bold))
+                   ""))
                 (buffer-name-str
                  (propertize " %b " 'face '(:weight bold)))
                 (modified-str
@@ -945,6 +968,7 @@ INITIAL-INPUT is the initial search term in the minibuffer."
                    (propertize " CIDER " 'face '(:foreground "#b58900" :weight bold)))))
            (concat
             evil-state
+            window-number-str
             buffer-name-str
             modified-str
             readonly-str
@@ -974,15 +998,15 @@ INITIAL-INPUT is the initial search term in the minibuffer."
  ;; If there is more than one, they won't work right.
  '(helm-minibuffer-history-key "M-p")
  '(package-selected-packages
-   '(aggressive-indent bnf-mode cider company diff-hl
-                       evil-collection evil-commentary evil-mc
+   '(aggressive-indent bnf-mode cider company diff-hl evil-collection
+                       evil-commentary evil-mc
                        evil-search-highlight-persist evil-surround
                        evil-visualstar flycheck general git-link
                        helm-projectile json-mode lsp-ui
                        rainbow-delimiters restart-emacs smartparens
                        spacemacs-theme treemacs-evil treemacs-magit
                        treemacs-projectile undo-fu undo-fu-session
-                       yaml-mode)))
+                       winum yaml-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
