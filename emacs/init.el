@@ -145,6 +145,13 @@
 (recentf-mode 1)
 (setq recentf-max-saved-items 100)
 
+;; Auto-revert buffers when files change on disk
+(global-auto-revert-mode 1)
+(setq auto-revert-verbose nil               ; Don't show "Reverting buffer..." messages
+      global-auto-revert-non-file-buffers t ; Also auto-refresh dired and other buffers
+      auto-revert-use-notify t              ; Use OS file notifications (fsevents on macOS)
+      auto-revert-avoid-polling t)          ; Avoid polling when notifications are available
+
 ;; Server mode
 (use-package server
   :ensure nil
